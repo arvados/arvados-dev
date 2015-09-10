@@ -442,6 +442,36 @@ services/dockercleaner install and tests will be skipped
 EOF
 fi
 
+# Ensure we have the newest selenium-webdriver
+gem update selenium-webdriver
+
+# If DISPLAY is unset, there is no way selenium/firefox could work
+if [ -n "${DISPLAY}" ]
+then
+    # Sanity check that selenium/firefox is actually working
+    ruby `dirname "$(readlink -f "$0")"`/selenium-firefox-sanity-check.rb
+    if [ "0" = "$?" ]
+    then
+	echo "Selenium appears to be working"
+    else
+	skip[apps/workbench]=1
+	cat >&2 <<EOF
+
+Warning: Selenium::WebDriver firefox driver not functional.
+apps/workbench install and tests will be skipped.
+
+EOF
+    fi
+else
+    cat >&2 <<EOF
+
+Warning: DISPLAY not set, Selenium::WebDriver cannot function.
+apps/workbench install and tests will be skipped.
+Suggest starting Xvfb and setting DISPLAY.
+
+EOF
+fi
+
 checkexit() {
     if [[ "$1" != "0" ]]; then
         title "!!!!!! $2 FAILED !!!!!!"
