@@ -92,7 +92,7 @@ case "$TARGET" in
         PYTHON_BACKPORTS=(python-gflags pyvcf google-api-python-client==1.4.2 \
             oauth2client==1.5.2 pyasn1==0.1.7 pyasn1-modules==0.0.5 \
             rsa uritemplate httplib2 ws4py pykka six pyexecjs jsonschema \
-            ciso8601 pycrypto backports.ssl_match_hostname llfuse==0.41.1 \
+            ciso8601 pycrypto backports.ssl_match_hostname llfuse \
             'pycurl<7.21.5')
         PYTHON3_BACKPORTS=(docker-py six requests websocket-client)
         ;;
@@ -105,7 +105,7 @@ case "$TARGET" in
         PYTHON_BACKPORTS=(python-gflags pyvcf google-api-python-client==1.4.2 \
             oauth2client==1.5.2 pyasn1==0.1.7 pyasn1-modules==0.0.5 \
             rsa uritemplate httplib2 ws4py pykka six pyexecjs jsonschema \
-            ciso8601 pycrypto backports.ssl_match_hostname llfuse==0.41.1 \
+            ciso8601 pycrypto backports.ssl_match_hostname llfuse \
             'pycurl<7.21.5')
         PYTHON3_BACKPORTS=(docker-py six requests websocket-client)
         ;;
@@ -118,7 +118,8 @@ case "$TARGET" in
         PYTHON_BACKPORTS=(python-gflags pyvcf google-api-python-client==1.4.2 \
             oauth2client==1.5.2 pyasn1==0.1.7 pyasn1-modules==0.0.5 \
             rsa uritemplate httplib2 ws4py pykka six pyexecjs jsonschema \
-            ciso8601 pycrypto backports.ssl_match_hostname llfuse==0.41.1 \
+            ciso8601 pycrypto backports.ssl_match_hostname llfuse \
+            contextlib2 \
             'pycurl<7.21.5')
         PYTHON3_BACKPORTS=(docker-py six requests websocket-client)
         ;;
@@ -128,7 +129,7 @@ case "$TARGET" in
         PYTHON2_PKG_PREFIX=python
         PYTHON3_PACKAGE=python$PYTHON3_VERSION
         PYTHON3_PKG_PREFIX=python3
-        PYTHON_BACKPORTS=(pyasn1==0.1.7 pyvcf pyasn1-modules==0.0.5 llfuse==0.41.1 ciso8601 \
+        PYTHON_BACKPORTS=(pyasn1==0.1.7 pyvcf pyasn1-modules==0.0.5 llfuse ciso8601 \
             google-api-python-client==1.4.2 six uritemplate oauth2client==1.5.2 httplib2 \
             rsa 'pycurl<7.21.5' backports.ssl_match_hostname)
         PYTHON3_BACKPORTS=(docker-py requests websocket-client)
@@ -143,7 +144,7 @@ case "$TARGET" in
             oauth2client==1.5.2 pyasn1==0.1.7 pyasn1-modules==0.0.5 \
             rsa uritemplate httplib2 ws4py pykka six pyexecjs jsonschema \
             ciso8601 pycrypto backports.ssl_match_hostname 'pycurl<7.21.5' \
-            python-daemon lockfile llfuse==0.41.1 'pbr<1.0')
+            python-daemon lockfile llfuse 'pbr<1.0')
         PYTHON3_BACKPORTS=(docker-py six requests websocket-client)
         export PYCURL_SSL_LIBRARY=nss
         ;;
@@ -353,6 +354,75 @@ LIBCLOUD_DIR=$(mktemp -d)
 )
 fpm_build $LIBCLOUD_DIR "$PYTHON2_PKG_PREFIX"-apache-libcloud
 rm -rf $LIBCLOUD_DIR
+
+if [[ $TARGET =~ ubuntu1204 ]]; then
+    # port libfuse 2.9.2 to Ubuntu 12.04 
+    LIBFUSE_DIR=$(mktemp -d)
+    (
+        cd $LIBFUSE_DIR
+        # download fuse 2.9.2 ubuntu 14.04 source package
+        file="fuse_2.9.2.orig.tar.xz" && curl -L -o "${file}" "http://archive.ubuntu.com/ubuntu/pool/main/f/fuse/${file}"
+        file="fuse_2.9.2-4ubuntu4.14.04.1.debian.tar.xz" && curl -L -o "${file}" "http://archive.ubuntu.com/ubuntu/pool/main/f/fuse/${file}"
+        file="fuse_2.9.2-4ubuntu4.14.04.1.dsc" && curl -L -o "${file}" "http://archive.ubuntu.com/ubuntu/pool/main/f/fuse/${file}"
+
+        # install dpkg-source and dpkg-buildpackage commands
+        apt-get install -y dpkg-dev
+
+        # extract source and apply patches
+        dpkg-source -x fuse_2.9.2-4ubuntu4.14.04.1.dsc
+        rm -f fuse_2.9.2.orig.tar.xz fuse_2.9.2-4ubuntu4.14.04.1.debian.tar.xz fuse_2.9.2-4ubuntu4.14.04.1.dsc
+
+        # add new version to changelog
+        cd fuse-2.9.2
+        (
+            echo "fuse (2.9.2-5) precise; urgency=low"
+            echo
+            echo "  * Backported from trusty-security to precise"
+            echo
+            echo " -- Joshua Randall <jcrandall@alum.mit.edu>  Thu, 4 Feb 2016 11:31:00 -0000"
+            echo
+            cat debian/changelog
+        ) > debian/changelog.new
+        mv debian/changelog.new debian/changelog
+
+        # install build-deps and build
+	# when updating, the following should be updated according to the contents of the "Build-Depends" line in debian/control
+        apt-get install -y debhelper dh-autoreconf libselinux-dev
+        dpkg-buildpackage -rfakeroot -b
+    )
+    fpm_build "$LIBFUSE_DIR/fuse_2.9.2-5_amd64.deb" fuse "Ubuntu Developers" deb "2.9.2" --iteration 5
+    fpm_build "$LIBFUSE_DIR/libfuse2_2.9.2-5_amd64.deb" libfuse2 "Ubuntu Developers" deb "2.9.2" --iteration 5
+    fpm_build "$LIBFUSE_DIR/libfuse-dev_2.9.2-5_amd64.deb" libfuse-dev "Ubuntu Developers" deb "2.9.2" --iteration 5
+    rm -rf $LIBFUSE_DIR
+elif [[ $TARGET =~ centos6 ]]; then
+    # port fuse 2.9.2 to centos 6
+    # install tools to build rpm from source
+    yum install -y rpm-build redhat-rpm-config
+    LIBFUSE_DIR=$(mktemp -d)
+    (
+        cd "$LIBFUSE_DIR"
+        # download fuse 2.9.2 centos 7 source rpm
+        file="fuse-2.9.2-6.el7.src.rpm" && curl -L -o "${file}" "http://vault.centos.org/7.2.1511/os/Source/SPackages/${file}"
+        (
+            # modify source rpm spec to remove conflict on filesystem version
+            mkdir -p /root/rpmbuild/SOURCES
+            cd /root/rpmbuild/SOURCES
+            rpm2cpio ${LIBFUSE_DIR}/fuse-2.9.2-6.el7.src.rpm | cpio -i
+            perl -pi -e 's/Conflicts:\s*filesystem.*//g' fuse.spec
+        )
+        # build rpms from source 
+        rpmbuild -bb /root/rpmbuild/SOURCES/fuse.spec
+        rm -f fuse-2.9.2-6.el7.src.rpm
+        # move built RPMs to LIBFUSE_DIR
+        mv "/root/rpmbuild/RPMS/x86_64/fuse-2.9.2-6.el6.x86_64.rpm" ${LIBFUSE_DIR}/
+        mv "/root/rpmbuild/RPMS/x86_64/fuse-libs-2.9.2-6.el6.x86_64.rpm" ${LIBFUSE_DIR}/
+        mv "/root/rpmbuild/RPMS/x86_64/fuse-devel-2.9.2-6.el6.x86_64.rpm" ${LIBFUSE_DIR}/
+        rm -rf /root/rpmbuild
+    )
+    fpm_build "$LIBFUSE_DIR/fuse-libs-2.9.2-6.el6.x86_64.rpm" fuse-libs "Centos Developers" rpm "2.9.2" --iteration 5
+    fpm_build "$LIBFUSE_DIR/fuse-2.9.2-6.el6.x86_64.rpm" fuse "Centos Developers" rpm "2.9.2" --iteration 5 --no-auto-depends
+    fpm_build "$LIBFUSE_DIR/fuse-devel-2.9.2-6.el6.x86_64.rpm" fuse-devel "Centos Developers" rpm "2.9.2" --iteration 5 --no-auto-depends
+fi
 
 # Python 2 dependencies
 declare -a PIP_DOWNLOAD_SWITCHES=(--no-deps)
