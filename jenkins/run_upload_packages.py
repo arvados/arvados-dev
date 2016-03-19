@@ -137,7 +137,7 @@ class DistroPackageSuite(PackageSuite):
 
     def upload_files(self, paths):
         cmd = self._build_cmd('scp', *paths)
-        cmd.append('{self.ssh_host}:{self.REMOTE_DEST_DIR}'.format(self=self))
+        cmd.append('{self.ssh_host}:{self.REMOTE_DEST_DIR}/{self.target}'.format(self=self))
         subprocess.check_call(cmd)
 
 
@@ -157,7 +157,7 @@ rm "$@"
         }
 
     def post_uploads(self, paths):
-        self._run_script(self.FREIGHT_SCRIPT, self.REMOTE_DEST_DIR,
+        self._run_script(self.FREIGHT_SCRIPT, self.REMOTE_DEST_DIR + '/' + self.target,
                          self.TARGET_DISTNAMES[self.target],
                          *self._paths_basenames(paths))
 
@@ -178,7 +178,7 @@ createrepo "$REPODIR"
     def post_uploads(self, paths):
         repo_dir = os.path.join(self.REPO_ROOT,
                                 self.TARGET_REPODIRS[self.target])
-        self._run_script(self.CREATEREPO_SCRIPT, self.REMOTE_DEST_DIR,
+        self._run_script(self.CREATEREPO_SCRIPT, self.REMOTE_DEST_DIR + '/' + self.target,
                          repo_dir, *self._paths_basenames(paths))
 
 
