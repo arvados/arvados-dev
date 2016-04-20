@@ -172,11 +172,10 @@ fi
 (cd cwltool
  python setup.py install
  python setup.py test
- ./build-node-docker.sh
 )
 
-./run_test.sh RUNNER=cwltool/cwltool/main.py DRAFT=draft-2
-./run_test.sh RUNNER=cwltool/cwltool/main.py DRAFT=draft-3
+./run_test.sh RUNNER=cwltool DRAFT=draft-2
+./run_test.sh RUNNER=cwltool DRAFT=draft-3
 
 (cd cwltool
  handle_python_package
@@ -193,7 +192,6 @@ fi
 if [[ "$UPLOAD_DOCKER" != 0 ]]; then
     docker push commonworkflowlanguage/cwltool_module
     docker push commonworkflowlanguage/cwltool
-    docker push commonworkflowlanguage/nodejs-engine
 fi
 
 if test -d common-workflow-language.github.io ; then
@@ -209,7 +207,7 @@ else
     )
 fi
 
-python -mcwltool --outdir=$PWD/common-workflow-language.github.io site/cwlsite.cwl site/cwlsite-job.json
+cwltool --outdir=$PWD/common-workflow-language.github.io site/cwlsite.cwl site/cwlsite-job.json
 
 (cd common-workflow-language.github.io
  git add --all
