@@ -262,10 +262,10 @@ def build_suite_and_upload(target, since_timestamp, args):
 def main(arguments, stdout=sys.stdout, stderr=sys.stderr):
     args = parse_arguments(arguments)
     setup_logger(stderr, args)
-    ts_file = TimestampFile(os.path.join(args.workspace, 'packages',
-                                         '.last_upload'))
-    last_upload_ts = ts_file.last_upload()
     for target in args.targets:
+        ts_file = TimestampFile(os.path.join(args.workspace, 'packages',
+                                             '.last_upload_%s' % target))
+        last_upload_ts = ts_file.last_upload()
         build_suite_and_upload(target, last_upload_ts, args)
     ts_file.update()
 
