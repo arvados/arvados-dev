@@ -267,7 +267,7 @@ def main(arguments, stdout=sys.stdout, stderr=sys.stderr):
                                              '.last_upload_%s' % target))
         last_upload_ts = ts_file.last_upload()
         build_suite_and_upload(target, last_upload_ts, args)
-    ts_file.update()
+        ts_file.update()
 
 if __name__ == '__main__':
     main(sys.argv[1:])
