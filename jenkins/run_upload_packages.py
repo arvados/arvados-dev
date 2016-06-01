@@ -172,7 +172,8 @@ createrepo "$REPODIR"
 """
     REPO_ROOT = '/var/www/rpm.arvados.org/'
     TARGET_REPODIRS = {
-        'centos6': 'CentOS/6/os/x86_64/'
+        'centos6': 'CentOS/6/os/x86_64/',
+        'centos7': 'CentOS/7/os/x86_64/',
         }
 
     def post_uploads(self, paths):
@@ -203,7 +204,7 @@ for target in ['debian7', 'debian8', 'ubuntu1204', 'ubuntu1404']:
     PACKAGE_SUITES[target] = _define_suite(
         DebianPackageSuite, os.path.join('packages', target, '*.deb'),
         target=target)
-for target in ['centos6']:
+for target in ['centos6', 'centos7']:
     PACKAGE_SUITES[target] = _define_suite(
         RedHatPackageSuite, os.path.join('packages', target, '*.rpm'),
         target=target)
@@ -267,7 +268,7 @@ def main(arguments, stdout=sys.stdout, stderr=sys.stderr):
                                              '.last_upload_%s' % target))
         last_upload_ts = ts_file.last_upload()
         build_suite_and_upload(target, last_upload_ts, args)
-    ts_file.update()
+        ts_file.update()
 
 if __name__ == '__main__':
     main(sys.argv[1:])
