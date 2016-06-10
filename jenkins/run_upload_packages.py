@@ -3,13 +3,41 @@
 import argparse
 import functools
 import glob
+import locale
 import logging
 import os
 import pipes
+import re
 import shutil
 import subprocess
 import sys
 import time
+
+def run_and_scan_output(cmd, read_output, *line_matchers,
+                        encoding=locale.getpreferredencoding(), **popen_kwargs):
+    """Run a subprocess and capture output lines matching regexps.
+
+    Arguments:
+    * cmd: The command to run, as a list or string, as for subprocess.Popen.
+    * read_output: 'stdout' or 'stderr', the name of the output stream to read.
+    Remaining arguments are regexps to match output, as strings or compiled
+    regexp objects.  Output lines matching any regexp will be captured.
+
+    Keyword arguments:
+    * encoding: The encoding used to decode the subprocess output.
+    Remaining keyword arguments are passed directly to subprocess.Popen.
+
+    Returns 2-tuple (subprocess returncode, list of matched output lines).
+    """
+    line_matchers = [matcher if hasattr(matcher, 'search') else re.compile(matcher)
+                     for matcher in line_matchers]
+    popen_kwargs[read_output] = subprocess.PIPE
+    proc = subprocess.Popen(cmd, **popen_kwargs)
+    with open(getattr(proc, read_output).fileno(), encoding=encoding) as output:
+        matched_lines = [line for line in output
+                         if any(regexp.search(line) for regexp in line_matchers)]
+    return proc.wait(), matched_lines
+
 
 class TimestampFile:
     def __init__(self, path):
@@ -62,6 +90,8 @@ class PackageSuite:
 
 class PythonPackageSuite(PackageSuite):
     LOGGER_PART = 'python'
+    REUPLOAD_REGEXP = re.compile(
+        r'^error: Upload failed \(400\): A file named "[^"]+" already exists\b')
 
     def __init__(self, glob_root, rel_globs):
         super().__init__(glob_root, rel_globs)
@@ -85,24 +115,23 @@ class PythonPackageSuite(PackageSuite):
         if not self.logger.isEnabledFor(logging.INFO):
             cmd.append('--quiet')
         cmd.extend(['sdist', '--dist-dir', '.upload_dist', 'upload'])
-        subprocess.check_call(cmd, cwd=src_dir)
+        upload_returncode, repushed = run_and_scan_output(
+            cmd, 'stderr', self.REUPLOAD_REGEXP, cwd=src_dir)
+        if (upload_returncode != 0) and not repushed:
+            raise subprocess.CalledProcessError(upload_returncode, cmd)
         shutil.rmtree(os.path.join(src_dir, '.upload_dist'))
 
 
 class GemPackageSuite(PackageSuite):
     LOGGER_PART = 'gems'
+    REUPLOAD_REGEXP = re.compile(r'^Repushing of gem versions is not allowed\.$')
 
     def upload_file(self, path):
         cmd = ['gem', 'push', path]
-        push_proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        repushed = any(line == b'Repushing of gem versions is not allowed.\n'
-                       for line in push_proc.stdout)
-        # Read any remaining stdout before closing.
-        for line in push_proc.stdout:
-            pass
-        push_proc.stdout.close()
-        if (push_proc.wait() != 0) and not repushed:
-            raise subprocess.CalledProcessError(push_proc.returncode, cmd)
+        push_returncode, repushed = run_and_scan_output(
+            cmd, 'stdout', self.REUPLOAD_REGEXP)
+        if (push_returncode != 0) and not repushed:
+            raise subprocess.CalledProcessError(push_returncode, cmd)
 
 
 class DistroPackageSuite(PackageSuite):
