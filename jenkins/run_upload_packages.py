@@ -165,8 +165,11 @@ class DistroPackageSuite(PackageSuite):
                 self.__class__.__name__, *(pipes.quote(s) for s in args)))
 
     def upload_files(self, paths):
+        dest_dir = os.path.join(self.REMOTE_DEST_DIR, self.target)
+        mkdir = self._build_cmd('ssh', self.ssh_host, 'install', '-d', dest_dir)
+        subprocess.check_call(mkdir)
         cmd = self._build_cmd('scp', *paths)
-        cmd.append('{self.ssh_host}:{self.REMOTE_DEST_DIR}/{self.target}'.format(self=self))
+        cmd.append('{}:{}'.format(self.ssh_host, dest_dir))
         subprocess.check_call(cmd)
 
 
