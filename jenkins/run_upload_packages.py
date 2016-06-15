@@ -13,8 +13,8 @@ import subprocess
 import sys
 import time
 
-def run_and_scan_output(cmd, read_output, *line_matchers,
-                        encoding=locale.getpreferredencoding(), **popen_kwargs):
+def run_and_grep(cmd, read_output, *regexps,
+                 encoding=locale.getpreferredencoding(), **popen_kwargs):
     """Run a subprocess and capture output lines matching regexps.
 
     Arguments:
@@ -29,13 +29,13 @@ def run_and_scan_output(cmd, read_output, *line_matchers,
 
     Returns 2-tuple (subprocess returncode, list of matched output lines).
     """
-    line_matchers = [matcher if hasattr(matcher, 'search') else re.compile(matcher)
-                     for matcher in line_matchers]
+    regexps = [regexp if hasattr(regexp, 'search') else re.compile(regexp)
+               for regexp in regexps]
     popen_kwargs[read_output] = subprocess.PIPE
     proc = subprocess.Popen(cmd, **popen_kwargs)
     with open(getattr(proc, read_output).fileno(), encoding=encoding) as output:
         matched_lines = [line for line in output
-                         if any(regexp.search(line) for regexp in line_matchers)]
+                         if any(regexp.search(line) for regexp in regexps)]
     return proc.wait(), matched_lines
 
 
@@ -115,7 +115,7 @@ class PythonPackageSuite(PackageSuite):
         if not self.logger.isEnabledFor(logging.INFO):
             cmd.append('--quiet')
         cmd.extend(['sdist', '--dist-dir', '.upload_dist', 'upload'])
-        upload_returncode, repushed = run_and_scan_output(
+        upload_returncode, repushed = run_and_grep(
             cmd, 'stderr', self.REUPLOAD_REGEXP, cwd=src_dir)
         if (upload_returncode != 0) and not repushed:
             raise subprocess.CalledProcessError(upload_returncode, cmd)
@@ -128,8 +128,7 @@ class GemPackageSuite(PackageSuite):
 
     def upload_file(self, path):
         cmd = ['gem', 'push', path]
-        push_returncode, repushed = run_and_scan_output(
-            cmd, 'stdout', self.REUPLOAD_REGEXP)
+        push_returncode, repushed = run_and_grep(cmd, 'stdout', self.REUPLOAD_REGEXP)
         if (push_returncode != 0) and not repushed:
             raise subprocess.CalledProcessError(push_returncode, cmd)
 
