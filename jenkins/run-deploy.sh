@@ -91,9 +91,9 @@ title () {
 
 function run_puppet() {
   node=$1
-  return_var=$2
 
   title "Running puppet on $node"
+  sleep $[ $RANDOM / 6000 ].$[ $RANDOM / 1000 ]
   TMP_FILE=`mktemp`
   if [[ "$DEBUG" != "0" ]]; then
     ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 5" root@$node -C bash -c "'$PUPPET_AGENT'" | tee $TMP_FILE
@@ -122,8 +122,13 @@ function run_puppet() {
   if [[ "$ECODE" == "2" ]]; then
     ECODE=0
   fi
-  rm -f $TMP_FILE
-  eval "$return_var=$ECODE"
+
+  if [[ "$ECODE" == "0" ]]; then
+      rm -f $TMP_FILE
+      echo $node successfully updates
+  else
+      echo $node exit code: $ECODE see $TMP_FILE for details
+  fi
 }
 
 function run_command() {
@@ -134,9 +139,9 @@ function run_command() {
   title "Running '$command' on $node"
   TMP_FILE=`mktemp`
   if [[ "$DEBUG" != "0" ]]; then
-    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 5" root@$node -C "$command" | tee $TMP_FILE
+    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" root@$node -C "$command" | tee $TMP_FILE
   else
-    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 5" root@$node -C "$command" > $TMP_FILE 2>&1
+    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" root@$node -C "$command" > $TMP_FILE 2>&1
   fi
 
   ECODE=$?
@@ -229,21 +234,8 @@ title "Gathering list of shell and Keep nodes"
 SHELL_NODES=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv virtual_machine list |jq .items[].hostname -r`
 KEEP_NODES=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv keep_service list |jq .items[].service_host -r`
 
-title "Updating workbench"
-SUM_ECODE=0
-if [[ `host workbench.$ARVADOS_API_HOST |cut -f4 -d' '` != `host $ARVADOS_API_HOST |cut -f4 -d' '` ]]; then
-  # Workbench runs on a separate host. We need to run puppet there too.
-  run_puppet workbench.$IDENTIFIER ECODE
-  SUM_ECODE=$(($SUM_ECODE + $ECODE))
-fi
-
-if [[ "$SUM_ECODE" != "0" ]]; then
-  title "ERROR: Updating workbench FAILED"
-  EXITCODE=$(($EXITCODE + $SUM_ECODE))
-  exit $EXITCODE
-fi
-
-for n in manage switchyard $SHELL_NODES $KEEP_NODES; do
+nodes=""
+for n in workbench manage switchyard $SHELL_NODES $KEEP_NODES; do
   ECODE=0
   if [[ $n =~ $ARVADOS_API_HOST$ ]]; then
     # e.g. keep.qr1hi.arvadosapi.com
@@ -252,15 +244,16 @@ for n in manage switchyard $SHELL_NODES $KEEP_NODES; do
     # e.g. shell
     node=$n.$ARVADOS_API_HOST
   fi
-
   # e.g. keep.qr1hi
-  node=${node%.arvadosapi.com}
-
-  title "Updating $node"
-  run_puppet $node ECODE
-  if [[ "$ECODE" != "0" ]]; then
-    title "ERROR: Updating $node node FAILED: exit code $ECODE"
-    EXITCODE=$(($EXITCODE + $ECODE))
-    exit $EXITCODE
-  fi
+  nodes="$nodes ${node%.arvadosapi.com}"
 done
+
+## at this point nodes should be an array containing
+## manage.qr1hi,  keep.qr1hi, etc
+## that should be defined in the .ssh/config file
+title "Updating in parallel: $nodes"
+export -f run_puppet
+export -f title
+export SSH_PORT
+export PUPPET_AGENT
+echo $nodes|xargs -d " " -n 1 -P 10 -I {} bash -c "run_puppet {}"
