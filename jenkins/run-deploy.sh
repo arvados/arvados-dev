@@ -221,6 +221,8 @@ run_command shell.$IDENTIFIER ECODE "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_
 
 if [[ "$?" == "0" ]]; then
   title "Found latest arvados/jobs Docker image, nothing to upload"
+  # Just in case it isn't yet, tag the image as latest
+  ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker arvados/jobs latest"
 else
   title "Installing latest arvados/jobs Docker image"
   ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN /usr/local/rvm/bin/rvm-exec default arv keep docker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $GIT_COMMIT"
