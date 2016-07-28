@@ -121,8 +121,9 @@ if [[ "$ARVADOS_API_HOST" == "" ]] || [[ "$ARVADOS_API_TOKEN" == "" ]]; then
 fi
 
 ## FIXME: add a git clone if common-workflow-language dir isn't there
+## FIXME: create /root/arvados-cwl-runner-with-checksum.sh (#!/bin/sh\nexec arvados-cwl-runner --compute-checksum "$@") instead of assuming it's there
 
-run_command shell.$IDENTIFIER ECODE "cd common-workflow-language; git pull; ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN  ./run_test.sh -n1-69,71-73 "
+run_command shell.$IDENTIFIER ECODE "cd common-workflow-language; git pull; ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN  ./run_test.sh -n1-69,71-73 RUNNER=/root/arvados-cwl-runner-with-checksum.sh "
 
 exit $ECODE
 
