@@ -3,6 +3,29 @@
 DEBUG=0
 SSH_PORT=22
 
+read -d] -r SCOPES <<EOF
+--scopes
+'["GET /arvados/v1/virtual_machines",\n
+"GET /arvados/v1/keep_services",\n
+"GET /arvados/v1/keep_services/",\n
+"GET /arvados/v1/groups",\n
+"GET /arvados/v1/groups/",\n
+"GET /arvados/v1/links",\n
+"GET /arvados/v1/collections",\n
+"POST /arvados/v1/collections",\n
+"POST /arvados/v1/links",\n
+"GET /arvados/v1/users/current",\n
+"POST /arvados/v1/users/current",\n
+"GET /arvados/v1/jobs",\n
+"POST /arvados/v1/jobs",\n
+"GET /arvados/v1/pipeline_instances",\n
+"POST /arvados/v1/pipeline_instances",\n
+"PUT /arvados/v1/pipeline_instances/",\n
+"GET /arvados/v1/collections/",\n
+"POST /arvados/v1/collections/",\n
+"GET /arvados/v1/logs"]'
+EOF
+
 function usage {
     echo >&2
     echo >&2 "usage: $0 [options] <identifier>"
@@ -16,17 +39,10 @@ function usage {
     echo >&2
     echo >&2 "Note: this script requires an arvados token created with these permissions:"
     echo >&2 '  arv api_client_authorization create_system_auth \'
-    echo >&2 '    --scopes "[\"GET /arvados/v1/virtual_machines\",'
-    echo >&2 '               \"GET /arvados/v1/keep_services\",'
-    echo >&2 '               \"GET /arvados/v1/keep_services/\",'
-    echo >&2 '               \"GET /arvados/v1/groups\",'
-    echo >&2 '               \"GET /arvados/v1/groups/\",'
-    echo >&2 '               \"GET /arvados/v1/links\",'
-    echo >&2 '               \"GET /arvados/v1/collections\",'
-    echo >&2 '               \"POST /arvados/v1/collections\",'
-    echo >&2 '               \"POST /arvados/v1/links\"]"'
+    echo -e $SCOPES"]'" >&2
     echo >&2
 }
+
 
 # NOTE: This requires GNU getopt (part of the util-linux package on Debian-based distros).
 TEMP=`getopt -o hdp: \
