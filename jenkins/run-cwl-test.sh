@@ -73,7 +73,7 @@ exit ${agent_exitcode:-99}
 
 title () {
   date=`date +'%Y-%m-%d %H:%M:%S'`
-  printf "$date $1\n"
+  printf "%s\n" "$date $1"
 }
 
 function run_command() {
@@ -81,16 +81,15 @@ function run_command() {
   return_var=$2
   command=$3
 
-  title "Running '$command' on $node"
+  title "Running '${command/ARVADOS_API_TOKEN=??????????????????????????????????????????????????/ARVADOS_API_TOKEN=suppressed}' on $node"
   TMP_FILE=`mktemp`
   if [[ "$DEBUG" != "0" ]]; then
-    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" root@$node -C "$command" | tee $TMP_FILE
+    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" ci@$node -C "$command" | tee $TMP_FILE
   else
-    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" root@$node -C "$command" > $TMP_FILE 2>&1
+    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" ci@$node -C "$command" > $TMP_FILE 2>&1
   fi
 
   ECODE=$?
-  RESULT=$(cat $TMP_FILE)
 
   if [[ "$ECODE" != "255" && "$ECODE" != "0"  ]]; then
     # Ssh exists 255 if the connection timed out. Just ignore that, it's possible that this node is
@@ -98,7 +97,7 @@ function run_command() {
     title "ERROR running command on $node: exit code $ECODE"
     if [[ "$DEBUG" == "0" ]]; then
       title "Command output follows:"
-      echo $RESULT
+      cat $TMP_FILE
     fi
   fi
   if [[ "$ECODE" == "255" ]]; then
@@ -120,10 +119,21 @@ if [[ "$ARVADOS_API_HOST" == "" ]] || [[ "$ARVADOS_API_TOKEN" == "" ]]; then
   exit 1
 fi
 
-## FIXME: add a git clone if common-workflow-language dir isn't there
-## FIXME: create /root/arvados-cwl-runner-with-checksum.sh (#!/bin/sh\nexec arvados-cwl-runner --compute-checksum "$@") instead of assuming it's there
+run_command shell.$IDENTIFIER ECODE "if [[ ! -e common-workflow-language ]]; then git clone https://github.com/common-workflow-language/common-workflow-language.git; fi"
 
-run_command shell.$IDENTIFIER ECODE "cd common-workflow-language; git pull; ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN  ./run_test.sh RUNNER=/root/arvados-cwl-runner-with-checksum.sh "
+if [[ "$ECODE" != "0" ]]; then
+  echo "Failed to git clone https://github.com/common-workflow-language/common-workflow-language.git"
+  exit $ECODE
+fi
+
+run_command shell.$IDENTIFIER ECODE "if [[ ! -e arvados-cwl-runner-with-checksum.sh ]]; then printf \"%s\n%s\n\" '#!/bin/sh' 'exec arvados-cwl-runner --compute-checksum \"\$@\"' > arvados-cwl-runner-with-checksum.sh; chmod 755 arvados-cwl-runner-with-checksum.sh; fi"
+
+if [[ "$ECODE" != "0" ]]; then
+  echo "Failed to create ~ci/arvados-cwl-runner-with-checksum.sh"
+  exit $ECODE
+fi
+
+run_command shell.$IDENTIFIER ECODE "cd common-workflow-language; git pull; ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN ./run_test.sh RUNNER=/home/ci/arvados-cwl-runner-with-checksum.sh "
 
 exit $ECODE
 
