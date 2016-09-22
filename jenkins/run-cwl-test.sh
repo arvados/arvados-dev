@@ -13,6 +13,29 @@ function usage {
     echo >&2 "  -p, --port <ssh port>         SSH port to use (default 22)"
     echo >&2 "  -d, --debug                   Enable debug output"
     echo >&2 "  -h, --help                    Display this help and exit"
+    echo >&2
+    echo >&2 " Required scope for the token used to run the tests:"
+    echo >&2
+    echo >&2 " arv api_client_authorization create_system_auth     --scopes "
+    echo >&2 "[\"GET /arvados/v1/virtual_machines\","
+    echo >&2 "\"GET /arvados/v1/keep_services\","
+    echo >&2 "\"GET /arvados/v1/keep_services/\","
+    echo >&2 "\"GET /arvados/v1/groups\","
+    echo >&2 "\"GET /arvados/v1/groups/\","
+    echo >&2 "\"GET /arvados/v1/links\","
+    echo >&2 "\"GET /arvados/v1/collections\","
+    echo >&2 "\"POST /arvados/v1/collections\","
+    echo >&2 "\"POST /arvados/v1/links\","
+    echo >&2 "\"GET /arvados/v1/users/current\","
+    echo >&2 "\"POST /arvados/v1/users/current\"," 
+    echo >&2 "\"GET /arvados/v1/jobs\","
+    echo >&2 "\"POST /arvados/v1/jobs\","
+    echo >&2 "\"GET /arvados/v1/pipeline_instances\","
+    echo >&2 "\"POST /arvados/v1/pipeline_instances\","
+    echo >&2 "\"GET /arvados/v1/collections/\","
+    echo >&2 "\"POST /arvados/v1/collections/\","
+    echo >&2 "\"GET /arvados/v1/logs\" ]" 
+    echo >&2
 }
 
 # NOTE: This requires GNU getopt (part of the util-linux package on Debian-based distros).
