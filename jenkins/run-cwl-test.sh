@@ -31,6 +31,7 @@ function usage {
     echo >&2 "\"GET /arvados/v1/jobs\","
     echo >&2 "\"POST /arvados/v1/jobs\","
     echo >&2 "\"GET /arvados/v1/pipeline_instances\","
+    echo >&2 "\"GET /arvados/v1/pipeline_instances/\","
     echo >&2 "\"POST /arvados/v1/pipeline_instances\","
     echo >&2 "\"GET /arvados/v1/collections/\","
     echo >&2 "\"POST /arvados/v1/collections/\","
