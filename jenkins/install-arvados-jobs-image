@@ -16,19 +16,26 @@ def findormake_project(arv, prefix, project_name):
     system_user_uuid = prefix+'-tpzed-000000000000000'
     groups = arv.groups().list(
         filters=[
-            ['group_class', '=', 'project'],
             ['name', '=', project_name],
             ['owner_uuid', '=', system_user_uuid],
         ],
-        select=['uuid']).execute()['items']
+        select=['uuid', 'group_class']).execute()['items']
     if groups:
-        uuid = groups[0]['uuid']
-        logger.debug('found project %s', uuid)
-        return uuid
+        proj = groups[0]
+        logger.debug('found project %s', proj['uuid'])
+        if proj['group_class'] != 'project':
+            logger.info('project %s has group_class %s, changing to %s',
+                        proj['uuid'], proj['group_class'], 'project')
+            arv.groups().update(
+                uuid=proj['uuid'],
+                body={
+                    'group_class': 'project',
+                }).execute()
+        return proj['uuid']
     uuid = arv.groups().create(body={
-        group_class: 'project',
-        name: project_name,
-        owner_uuid: system_user_uuid,
+        'group_class': 'project',
+        'name': project_name,
+        'owner_uuid': system_user_uuid,
     }).execute()['uuid']
     logger.info('created project %s: %s', uuid, project_name)
     return uuid
@@ -36,15 +43,16 @@ def findormake_project(arv, prefix, project_name):
 
 def findormake_project_perm(arv, prefix, project_uuid):
     all_users_group_uuid = prefix+'-j7d0g-fffffffffffffff'
-    if arv.links().list(
-            filters=[
-                ['tail_uuid', '=', all_users_group_uuid],
-                ['head_uuid', '=', project_uuid],
-                ['link_class', '=', 'permission'],
-                ['name', '=', 'can_read'],
-            ],
-            select=['uuid']).execute()['items']:
-        logger.debug('found permission link %s', uuid)
+    links = arv.links().list(
+        filters=[
+            ['tail_uuid', '=', all_users_group_uuid],
+            ['head_uuid', '=', project_uuid],
+            ['link_class', '=', 'permission'],
+            ['name', '=', 'can_read'],
+        ],
+        select=['uuid']).execute()['items']
+    if links:
+        logger.debug('found permission link %s', links[0]['uuid'])
         return
     uuid = arv.links().create(body={
         'tail_uuid': all_users_group_uuid,
@@ -76,8 +84,12 @@ def findorpull_image(want_repo, want_tag, project_uuid):
 
 def tag_latest(repo, tag, project_uuid):
     logger.debug('tagging %s:%s as %s:latest', repo, tag, repo)
-    subprocess.check_call([
-        'docker', 'tag', '-f', repo+':'+tag, repo+':latest'])
+    tag_cmd = ['docker', 'tag']
+    if subprocess.check_output(tag_cmd + ['--help']).find('--force') >= 0:
+        tag_cmd += ['--force']
+    tag_cmd += [repo+':'+tag, repo+':latest']
+    subprocess.check_call(tag_cmd)
+
     logger.debug('arv-keepdocker %s:latest', repo, tag, repo)
     subprocess.check_call([
         'arv-keepdocker',
