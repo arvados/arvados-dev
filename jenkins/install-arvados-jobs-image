@@ -90,7 +90,7 @@ def tag_latest(repo, tag, project_uuid):
     tag_cmd += [repo+':'+tag, repo+':latest']
     subprocess.check_call(tag_cmd)
 
-    logger.debug('arv-keepdocker %s:latest', repo, tag, repo)
+    logger.debug('arv-keepdocker %s:latest', repo)
     subprocess.check_call([
         'arv-keepdocker',
         '--project-uuid='+project_uuid,
