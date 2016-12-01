@@ -39,6 +39,12 @@ function usage {
     echo >&2 "\"POST /arvados/v1/pipeline_instances\","
     echo >&2 "\"GET /arvados/v1/collections/\","
     echo >&2 "\"POST /arvados/v1/collections/\","
+    echo >&2 "\"GET /arvados/v1/container_requests\","
+    echo >&2 "\"GET /arvados/v1/container_requests/\","
+    echo >&2 "\"POST /arvados/v1/container_requests\","
+    echo >&2 "\"POST /arvados/v1/container_requests/\","
+    echo >&2 "\"GET /arvados/v1/containers\","
+    echo >&2 "\"GET /arvados/v1/containers/\","
     echo >&2 "\"GET /arvados/v1/logs\" ]"
     echo >&2
 }
