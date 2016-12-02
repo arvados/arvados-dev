@@ -47,8 +47,8 @@ function usage {
 
 
 # NOTE: This requires GNU getopt (part of the util-linux package on Debian-based distros).
-TEMP=`getopt -o hdpc: \
-    --long help,debug,port,concurrency: \
+TEMP=`getopt -o hdp:c: \
+    --long help,debug,port:,concurrency: \
     -n "$0" -- "$@"`
 
 if [ $? != 0 ] ; then echo "Use -h for help"; exit 1 ; fi
