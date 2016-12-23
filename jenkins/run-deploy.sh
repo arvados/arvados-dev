@@ -189,11 +189,6 @@ title "Updating API server"
 SUM_ECODE=0
 run_puppet $IDENTIFIER.arvadosapi.com ECODE
 SUM_ECODE=$(($SUM_ECODE + $ECODE))
-if [ ! "$IDENTIFIER" = "c97qk" ]
-then
-  run_command $IDENTIFIER.arvadosapi.com ECODE "dpkg -L arvados-mailchimp-plugin 2>/dev/null && apt-get install arvados-mailchimp-plugin --reinstall || echo"
-  SUM_ECODE=$(($SUM_ECODE + $ECODE))
-fi
 
 if [[ "$SUM_ECODE" != "0" ]]; then
   title "ERROR: Updating API server FAILED"
