@@ -57,6 +57,14 @@ if [[ "$REVISION" != '' ]]; then
   git checkout $REVISION
 fi
 
+ECODE=$?
+
+if [[ "$ECODE" != "0" ]]; then
+  title "!!!!!! PERFORMANCE TESTS FAILED (`timer`) !!!!!!"
+  EXITCODE=$(($EXITCODE + $ECODE))
+  exit $EXITCODE
+fi
+
 cp -f /home/jenkins/diagnostics/arvados-workbench/$INSTANCE-application.yml $WORKSPACE/apps/workbench/config/application.yml
 
 cd $WORKSPACE/apps/workbench
