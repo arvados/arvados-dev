@@ -75,7 +75,12 @@ if [[ ! -d tmp ]]; then
   mkdir tmp
 fi
 
-RAILS_ENV=diagnostics bundle exec rake TEST=test/diagnostics/pipeline_test.rb
+if [ $INSTANCE == '9tee4' ] 
+then
+    RAILS_ENV=diagnostics bundle exec rake TEST=test/diagnostics/container_request_test.rb
+else
+    RAILS_ENV=diagnostics bundle exec rake TEST=test/diagnostics/pipeline_test.rb
+fi
 
 ECODE=$?
 
