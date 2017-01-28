@@ -203,7 +203,6 @@ createrepo "$REPODIR"
 """
     REPO_ROOT = '/var/www/rpm.arvados.org/'
     TARGET_REPODIRS = {
-        'centos6': 'CentOS/6/os/x86_64/',
         'centos7': 'CentOS/7/os/x86_64/',
         }
 
@@ -235,7 +234,7 @@ for target in ['debian8', 'ubuntu1204', 'ubuntu1404', 'ubuntu1604']:
     PACKAGE_SUITES[target] = _define_suite(
         DebianPackageSuite, os.path.join('packages', target, '*.deb'),
         target=target)
-for target in ['centos6', 'centos7']:
+for target in ['centos7']:
     PACKAGE_SUITES[target] = _define_suite(
         RedHatPackageSuite, os.path.join('packages', target, '*.rpm'),
         target=target)
