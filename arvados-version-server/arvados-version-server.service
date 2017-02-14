@@ -1,0 +1,13 @@
+[Unit]
+Description=Arvados version server
+Documentation=https://doc.arvados.org/
+After=network.target
+AssertPathExists=/etc/arvados/version-server/version-server.yml
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/arvados-version-server
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
