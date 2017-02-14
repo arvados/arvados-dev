@@ -1,5 +1,9 @@
 #!/usr/bin/env ruby
 
+# Copyright (C) The Arvados Authors. All rights reserved.
+#
+# SPDX-License-Identifier: AGPL-3.0
+
 # This script can be installed as a git update hook.
 
 # It can also be installed as a gitolite 'hooklet' in the

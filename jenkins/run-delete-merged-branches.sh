@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Copyright (C) The Arvados Authors. All rights reserved.
+#
+# SPDX-License-Identifier: AGPL-3.0
+
 # Provide generic exit strategy for any error in execution
 _exit_handler() {
     local rc="${?}"

@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# Copyright (C) The Arvados Authors. All rights reserved.
+#
+# SPDX-License-Identifier: AGPL-3.0
+
 DEBUG=0
 SSH_PORT=22
 PUPPET_CONCURRENCY=5
