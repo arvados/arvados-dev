@@ -270,8 +270,15 @@ if [[ "$?" == "0" ]]; then
 else
   title "Installing latest arvados/jobs Docker image"
   ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN /usr/local/rvm/bin/rvm-exec default arv keep docker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $GIT_COMMIT"
+  ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER docker tag --force >/dev/null 2>&1
+  # docker 1.13 no longer supports --force. Sigh.
+  if [[ "$?" == "125" ]]; then
+    FORCE_TAG=""
+  else
+    FORCE_TAG="--force"
+  fi
   ## adding latest tag too  refs 9254
-  ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER docker tag --force arvados/jobs:$GIT_COMMIT arvados/jobs:latest
+  ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER docker tag $FORCE_TAG arvados/jobs:$GIT_COMMIT arvados/jobs:latest
   ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs latest"
   if [[ "$?" -ne 0 ]]; then
     title "'git pull' failed exiting..."
