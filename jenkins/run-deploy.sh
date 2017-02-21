@@ -256,7 +256,7 @@ if [[ "$DOCKER_IMAGES_PROJECT" == "" ]]; then
 fi
 
 title "Found Arvados Standard Docker Images project with uuid $DOCKER_IMAGES_PROJECT"
-GIT_COMMIT=`ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "python -c 'import arvados_cwl ; print arvados_cwl.__version__'"`
+GIT_COMMIT=`ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "python -c 'import arvados_cwl ; print arvados_cwl.__version__'" 2>&1 |grep -v INFO:rdflib:RDFLib`
 
 if [[ "$?" != "0" ]] || [[ "$GIT_COMMIT" == "" ]]; then
   title "ERROR: unable to get arvados/jobs Docker image git revision"
