@@ -11,6 +11,7 @@ import (
 	"git.curoverse.com/arvados.git/sdk/go/config"
 	"io"
 	"io/ioutil"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -24,20 +25,20 @@ import (
 
 var listener net.Listener
 
-type logStruct struct {
+type report struct {
 	Type string
 	Msg  string
 }
 
-type packageStruct struct {
-	sourceDir            string
-	packageName          string
-	packageType          string
-	packageVersionType   string
-	packageVersionPrefix string
+type bundle struct {
+	sourceDir     string
+	name          string
+	packageType   string
+	versionType   string
+	versionPrefix string
 }
 
-type returnStruct struct {
+type result struct {
 	RequestHash string
 	GitHash     string
 	Versions    map[string]map[string]string
@@ -45,13 +46,13 @@ type returnStruct struct {
 	Elapsed     string
 }
 
-type aboutStruct struct {
+type about struct {
 	Name    string
 	Version string
 	URL     string
 }
 
-type helpStruct struct {
+type help struct {
 	Usage string
 }
 
@@ -62,251 +63,251 @@ type Config struct {
 	GitExecutablePath string
 	ListenPort        string
 
-	Packages []packageStruct
+	Packages []bundle
 }
 
 var theConfig Config
 
 const defaultConfigPath = "/etc/arvados/version-server/version-server.yml"
 
-func loadPackages() (packages []packageStruct) {
-	packages = []packageStruct{
+func loadPackages() (packages []bundle) {
+	packages = []bundle{
 		{
-			sourceDir:            ".",
-			packageName:          "arvados-src",
-			packageType:          "distribution",
-			packageVersionType:   "git",
-			packageVersionPrefix: "0.1",
+			sourceDir:     ".",
+			name:          "arvados-src",
+			packageType:   "distribution",
+			versionType:   "git",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "apps/workbench",
-			packageName:          "arvados-workbench",
-			packageType:          "distribution",
-			packageVersionType:   "git",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "apps/workbench",
+			name:          "arvados-workbench",
+			packageType:   "distribution",
+			versionType:   "git",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "sdk/cwl",
-			packageName:          "python-arvados-cwl-runner",
-			packageType:          "distribution",
-			packageVersionType:   "python",
-			packageVersionPrefix: "1.0",
+			sourceDir:     "sdk/cwl",
+			name:          "python-arvados-cwl-runner",
+			packageType:   "distribution",
+			versionType:   "python",
+			versionPrefix: "1.0",
 		},
 		{
-			sourceDir:            "sdk/cwl",
-			packageName:          "arvados-cwl-runner",
-			packageType:          "python",
-			packageVersionType:   "python",
-			packageVersionPrefix: "1.0",
+			sourceDir:     "sdk/cwl",
+			name:          "arvados-cwl-runner",
+			packageType:   "python",
+			versionType:   "python",
+			versionPrefix: "1.0",
 		},
 		{
-			sourceDir:            "sdk/cwl",
-			packageName:          "arvados/jobs",
-			packageType:          "docker",
-			packageVersionType:   "docker",
-			packageVersionPrefix: "",
+			sourceDir:     "sdk/cwl",
+			name:          "arvados/jobs",
+			packageType:   "docker",
+			versionType:   "docker",
+			versionPrefix: "",
 		},
 		{
-			sourceDir:            "sdk/go/crunchrunner",
-			packageName:          "crunchrunner",
-			packageType:          "distribution",
-			packageVersionType:   "go",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "sdk/go/crunchrunner",
+			name:          "crunchrunner",
+			packageType:   "distribution",
+			versionType:   "go",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "sdk/pam",
-			packageName:          "libpam-arvados",
-			packageType:          "distribution",
-			packageVersionType:   "python",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "sdk/pam",
+			name:          "libpam-arvados",
+			packageType:   "distribution",
+			versionType:   "python",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "sdk/pam",
-			packageName:          "arvados-pam",
-			packageType:          "python",
-			packageVersionType:   "python",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "sdk/pam",
+			name:          "arvados-pam",
+			packageType:   "python",
+			versionType:   "python",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "sdk/python",
-			packageName:          "python-arvados-python-client",
-			packageType:          "distribution",
-			packageVersionType:   "python",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "sdk/python",
+			name:          "python-arvados-python-client",
+			packageType:   "distribution",
+			versionType:   "python",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "sdk/python",
-			packageName:          "arvados-python-client",
-			packageType:          "python",
-			packageVersionType:   "python",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "sdk/python",
+			name:          "arvados-python-client",
+			packageType:   "python",
+			versionType:   "python",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "services/api",
-			packageName:          "arvados-api-server",
-			packageType:          "distribution",
-			packageVersionType:   "git",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "services/api",
+			name:          "arvados-api-server",
+			packageType:   "distribution",
+			versionType:   "git",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "services/arv-git-httpd",
-			packageName:          "arvados-git-httpd",
-			packageType:          "distribution",
-			packageVersionType:   "go",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "services/arv-git-httpd",
+			name:          "arvados-git-httpd",
+			packageType:   "distribution",
+			versionType:   "go",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "services/crunch-dispatch-local",
-			packageName:          "crunch-dispatch-local",
-			packageType:          "distribution",
-			packageVersionType:   "go",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "services/crunch-dispatch-local",
+			name:          "crunch-dispatch-local",
+			packageType:   "distribution",
+			versionType:   "go",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "services/crunch-dispatch-slurm",
-			packageName:          "crunch-dispatch-slurm",
-			packageType:          "distribution",
-			packageVersionType:   "go",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "services/crunch-dispatch-slurm",
+			name:          "crunch-dispatch-slurm",
+			packageType:   "distribution",
+			versionType:   "go",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "services/crunch-run",
-			packageName:          "crunch-run",
-			packageType:          "distribution",
-			packageVersionType:   "go",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "services/crunch-run",
+			name:          "crunch-run",
+			packageType:   "distribution",
+			versionType:   "go",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "services/crunchstat",
-			packageName:          "crunchstat",
-			packageType:          "distribution",
-			packageVersionType:   "git",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "services/crunchstat",
+			name:          "crunchstat",
+			packageType:   "distribution",
+			versionType:   "git",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "services/dockercleaner",
-			packageName:          "arvados-docker-cleaner",
-			packageType:          "distribution",
-			packageVersionType:   "python",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "services/dockercleaner",
+			name:          "arvados-docker-cleaner",
+			packageType:   "distribution",
+			versionType:   "python",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "services/fuse",
-			packageName:          "python-arvados-fuse",
-			packageType:          "distribution",
-			packageVersionType:   "python",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "services/fuse",
+			name:          "python-arvados-fuse",
+			packageType:   "distribution",
+			versionType:   "python",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "services/fuse",
-			packageName:          "arvados_fuse",
-			packageType:          "python",
-			packageVersionType:   "python",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "services/fuse",
+			name:          "arvados_fuse",
+			packageType:   "python",
+			versionType:   "python",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "services/keep-balance",
-			packageName:          "keep-balance",
-			packageType:          "distribution",
-			packageVersionType:   "go",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "services/keep-balance",
+			name:          "keep-balance",
+			packageType:   "distribution",
+			versionType:   "go",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "services/keepproxy",
-			packageName:          "keepproxy",
-			packageType:          "distribution",
-			packageVersionType:   "go",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "services/keepproxy",
+			name:          "keepproxy",
+			packageType:   "distribution",
+			versionType:   "go",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "services/keepstore",
-			packageName:          "keepstore",
-			packageType:          "distribution",
-			packageVersionType:   "go",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "services/keepstore",
+			name:          "keepstore",
+			packageType:   "distribution",
+			versionType:   "go",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "services/keep-web",
-			packageName:          "keep-web",
-			packageType:          "distribution",
-			packageVersionType:   "go",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "services/keep-web",
+			name:          "keep-web",
+			packageType:   "distribution",
+			versionType:   "go",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "services/nodemanager",
-			packageName:          "arvados-node-manager",
-			packageType:          "distribution",
-			packageVersionType:   "python",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "services/nodemanager",
+			name:          "arvados-node-manager",
+			packageType:   "distribution",
+			versionType:   "python",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "services/nodemanager",
-			packageName:          "arvados-node-manager",
-			packageType:          "python",
-			packageVersionType:   "python",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "services/nodemanager",
+			name:          "arvados-node-manager",
+			packageType:   "python",
+			versionType:   "python",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "services/ws",
-			packageName:          "arvados-ws",
-			packageType:          "distribution",
-			packageVersionType:   "go",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "services/ws",
+			name:          "arvados-ws",
+			packageType:   "distribution",
+			versionType:   "go",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "tools/crunchstat-summary",
-			packageName:          "crunchstat-summary",
-			packageType:          "distribution",
-			packageVersionType:   "go",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "tools/crunchstat-summary",
+			name:          "crunchstat-summary",
+			packageType:   "distribution",
+			versionType:   "go",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "tools/keep-block-check",
-			packageName:          "keep-block-check",
-			packageType:          "distribution",
-			packageVersionType:   "go",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "tools/keep-block-check",
+			name:          "keep-block-check",
+			packageType:   "distribution",
+			versionType:   "go",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "tools/keep-exercise",
-			packageName:          "keep-exercise",
-			packageType:          "distribution",
-			packageVersionType:   "go",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "tools/keep-exercise",
+			name:          "keep-exercise",
+			packageType:   "distribution",
+			versionType:   "go",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "tools/keep-rsync",
-			packageName:          "keep-rsync",
-			packageType:          "distribution",
-			packageVersionType:   "go",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "tools/keep-rsync",
+			name:          "keep-rsync",
+			packageType:   "distribution",
+			versionType:   "go",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "sdk/ruby",
-			packageName:          "arvados",
-			packageType:          "gem",
-			packageVersionType:   "ruby",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "sdk/ruby",
+			name:          "arvados",
+			packageType:   "gem",
+			versionType:   "ruby",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "sdk/cli",
-			packageName:          "arvados-cli",
-			packageType:          "gem",
-			packageVersionType:   "ruby",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "sdk/cli",
+			name:          "arvados-cli",
+			packageType:   "gem",
+			versionType:   "ruby",
+			versionPrefix: "0.1",
 		},
 		{
-			sourceDir:            "services/login-sync",
-			packageName:          "arvados-login-sync",
-			packageType:          "gem",
-			packageVersionType:   "ruby",
-			packageVersionPrefix: "0.1",
+			sourceDir:     "services/login-sync",
+			name:          "arvados-login-sync",
+			packageType:   "gem",
+			versionType:   "ruby",
+			versionPrefix: "0.1",
 		},
 	}
 	return
 }
 
-func lookupInCache(hash string) (returnStruct, error) {
+func lookupInCache(hash string) (result, error) {
 	statData, err := os.Stat(theConfig.CacheDirPath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(theConfig.CacheDirPath, 0700)
@@ -316,19 +317,19 @@ func lookupInCache(hash string) (returnStruct, error) {
 	} else {
 		if !statData.IsDir() {
 			logError([]string{"The path", theConfig.CacheDirPath, "is not a directory"})
-			return returnStruct{}, fmt.Errorf("The path %s is not a directory", theConfig.CacheDirPath)
+			return result{}, fmt.Errorf("The path %s is not a directory", theConfig.CacheDirPath)
 		}
 	}
 	file, e := ioutil.ReadFile(theConfig.CacheDirPath + "/" + hash)
 	if e != nil {
-		return returnStruct{}, fmt.Errorf("File error: %v\n", e)
+		return result{}, fmt.Errorf("File error: %v\n", e)
 	}
-	var m returnStruct
+	var m result
 	err = json.Unmarshal(file, &m)
 	return m, err
 }
 
-func writeToCache(hash string, data returnStruct) (err error) {
+func writeToCache(hash string, data result) (err error) {
 	statData, err := os.Stat(theConfig.CacheDirPath)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(theConfig.CacheDirPath, 0700)
@@ -585,17 +586,17 @@ func getPackageVersions(hash string) (versions map[string]map[string]string, git
 			err = nil
 			continue
 		}
-		packageName := p.packageName
+		name := p.name
 
 		var packageVersion string
 
-		if (p.packageVersionType == "git") || (p.packageVersionType == "go") {
-			packageVersion, err = versionFromGit(p.packageVersionPrefix)
+		if (p.versionType == "git") || (p.versionType == "go") {
+			packageVersion, err = versionFromGit(p.versionPrefix)
 			if err != nil {
 				return nil, "", err
 			}
 		}
-		if p.packageVersionType == "go" {
+		if p.versionType == "go" {
 			var packageTimestamp string
 			packageTimestamp, err = timestampFromGit()
 			if err != nil {
@@ -603,31 +604,31 @@ func getPackageVersions(hash string) (versions map[string]map[string]string, git
 			}
 
 			if goSDKTimestamp > packageTimestamp {
-				packageVersion = p.packageVersionPrefix + goSDKVersionWithoutPrefix
+				packageVersion = p.versionPrefix + goSDKVersionWithoutPrefix
 			}
-		} else if p.packageVersionType == "python" {
+		} else if p.versionType == "python" {
 			// Not all of our packages that use our python sdk are automatically
 			// getting rebuilt when sdk/python changes. Yet.
-			if p.packageName == "python-arvados-cwl-runner" {
+			if p.name == "python-arvados-cwl-runner" {
 				err = pythonSDKVersionCheck(pythonSDKTimestamp)
 				if err != nil {
 					return nil, "", err
 				}
 			}
 
-			packageVersion, err = pythonVersionFromGit(p.packageVersionPrefix)
+			packageVersion, err = pythonVersionFromGit(p.versionPrefix)
 			if err != nil {
 				return nil, "", err
 			}
-		} else if p.packageVersionType == "ruby" {
-			packageVersion, err = rubyVersionFromGit(p.packageVersionPrefix)
+		} else if p.versionType == "ruby" {
+			packageVersion, err = rubyVersionFromGit(p.versionPrefix)
 			if err != nil {
 				return nil, "", err
 			}
-		} else if p.packageVersionType == "docker" {
+		} else if p.versionType == "docker" {
 			// the arvados/jobs image version is always the latest of the
 			// sdk/python and the sdk/cwl version
-			if p.packageName == "arvados/jobs" {
+			if p.name == "arvados/jobs" {
 				err = pythonSDKVersionCheck(pythonSDKTimestamp)
 				if err != nil {
 					return nil, "", err
@@ -642,18 +643,18 @@ func getPackageVersions(hash string) (versions map[string]map[string]string, git
 		if versions[strings.Title(p.packageType)] == nil {
 			versions[strings.Title(p.packageType)] = make(map[string]string)
 		}
-		versions[strings.Title(p.packageType)][packageName] = packageVersion
+		versions[strings.Title(p.packageType)][name] = packageVersion
 	}
 
 	return
 }
 
 func logError(m []string) {
-	fmt.Fprintln(os.Stderr, string(marshal(logStruct{"Error", strings.Join(m, " ")})))
+	log.Printf(string(marshal(report{"Error", strings.Join(m, " ")})))
 }
 
 func logNotice(m []string) {
-	fmt.Fprintln(os.Stderr, string(marshal(logStruct{"Notice", strings.Join(m, " ")})))
+	log.Printf(string(marshal(report{"Notice", strings.Join(m, " ")})))
 }
 
 func marshal(message interface{}) (encoded []byte) {
@@ -693,12 +694,12 @@ func packageVersionHandler(w http.ResponseWriter, r *http.Request) {
 	// Sanity check the input RequestHash
 	match, err := regexp.MatchString("^([a-z0-9]+|)$", r.URL.Path[11:])
 	if err != nil {
-		m := logStruct{"Error", "Error matching RequestHash"}
+		m := report{"Error", "Error matching RequestHash"}
 		marshalAndWrite(w, m)
 		return
 	}
 	if !match {
-		m := logStruct{"Error", "Invalid RequestHash"}
+		m := report{"Error", "Invalid RequestHash"}
 		marshalAndWrite(w, m)
 		return
 	}
@@ -709,7 +710,7 @@ func packageVersionHandler(w http.ResponseWriter, r *http.Request) {
 	if len(hash) != 7 && len(hash) != 40 {
 		hash, err = normalizeRequestedHash(hash)
 		if err != nil {
-			m := logStruct{"Error", err.Error()}
+			m := report{"Error", err.Error()}
 			marshalAndWrite(w, m)
 			return
 		}
@@ -724,11 +725,11 @@ func packageVersionHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		packageVersions, gitHash, err = getPackageVersions(hash)
 		if err != nil {
-			m := logStruct{"Error", err.Error()}
+			m := report{"Error", err.Error()}
 			marshalAndWrite(w, m)
 			return
 		}
-		m := returnStruct{"", gitHash, packageVersions, true, ""}
+		m := result{"", gitHash, packageVersions, true, ""}
 		err = writeToCache(hash, m)
 		if err != nil {
 			logError([]string{"Unable to save entry in cache directory", theConfig.CacheDirPath})
@@ -736,19 +737,19 @@ func packageVersionHandler(w http.ResponseWriter, r *http.Request) {
 		cached = false
 	}
 
-	m := returnStruct{hash, gitHash, packageVersions, cached, fmt.Sprintf("%v", time.Since(start))}
+	m := result{hash, gitHash, packageVersions, cached, fmt.Sprintf("%v", time.Since(start))}
 	marshalAndWrite(w, m)
 }
 
 func aboutHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	m := aboutStruct{"Arvados Version Server", "0.1", "https://arvados.org"}
+	m := about{"Arvados Version Server", "0.1", "https://arvados.org"}
 	marshalAndWrite(w, m)
 }
 
 func helpHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	m := helpStruct{"GET /v1/commit/ or GET /v1/commit/git-commit or GET /v1/about or GET /v1/help"}
+	m := help{"GET /v1/commit/ or GET /v1/commit/git-commit or GET /v1/about or GET /v1/help"}
 	marshalAndWrite(w, m)
 }
 
