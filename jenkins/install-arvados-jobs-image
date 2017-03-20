@@ -70,15 +70,6 @@ def findormake_project_perm(arv, prefix, project_uuid):
 
 
 def findorpull_image(want_repo, want_tag, project_uuid):
-    for line in subprocess.check_output(['arv-keepdocker']).splitlines():
-        try:
-            repo, tag, image_id, collection, created = line.split(None, 4)
-        except ValueError:
-            continue
-        if repo == want_repo and tag == want_tag:
-            logger.debug('found image tag %s collection %s created %s',
-                        tag, collection, created)
-            return collection
     logger.info('pulling repo %s tag %s', want_repo, want_tag)
     subprocess.check_call([
         'arv-keepdocker',
