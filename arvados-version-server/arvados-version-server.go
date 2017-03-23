@@ -511,43 +511,45 @@ func normalizeRequestedHash(hash string) (string, error) {
 }
 
 func getPackageVersionsWorker(hash string) (gitHash string, goSDKTimestamp string, goSDKVersionWithoutPrefix string, pythonSDKTimestamp string, err error) {
+	gitHash = ""
+	goSDKTimestamp = ""
+	goSDKVersionWithoutPrefix = ""
+	pythonSDKTimestamp = ""
+
 	_, err = prepareGitCheckout(hash)
 	if err != nil {
-		return "", "", "", "", err
+		return
 	}
 
 	// Get the git hash for the tree
 	gitHash, err = gitHashFull()
 	if err != nil {
-		return "", "", "", "", err
+		return
 	}
 
 	// Get the git timestamp and version string for the sdk/go directory
 	err = os.Chdir(theConfig.DirPath + "/sdk/go")
 	if err != nil {
-		goSDKTimestamp = ""
-		goSDKVersionWithoutPrefix = ""
 		err = nil
 	} else {
 		goSDKTimestamp, err = timestampFromGit()
 		if err != nil {
-			return "", "", "", "", err
+			return
 		}
 		goSDKVersionWithoutPrefix, err = versionFromGit("")
 		if err != nil {
-			return "", "", "", "", err
+			return
 		}
 	}
 
 	// Get the git timestamp and version string for the sdk/python directory
 	err = os.Chdir(theConfig.DirPath + "/sdk/python")
 	if err != nil {
-		pythonSDKTimestamp = ""
 		err = nil
 	} else {
 		pythonSDKTimestamp, err = timestampFromGit()
 		if err != nil {
-			return "", "", "", "", err
+			return
 		}
 	}
 
