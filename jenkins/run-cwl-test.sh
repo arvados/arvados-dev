@@ -159,10 +159,10 @@ if [[ "$ARVADOS_API_HOST" == "" ]] || [[ "$ARVADOS_API_TOKEN" == "" ]]; then
   exit 1
 fi
 
-run_command shell.$IDENTIFIER ECODE "if [[ ! -e common-workflow-language ]]; then git clone https://github.com/common-workflow-language/common-workflow-language.git; fi"
+run_command shell.$IDENTIFIER ECODE "if [[ ! -e common-workflow-language ]]; then git clone --depth 1 https://github.com/common-workflow-language/common-workflow-language.git; fi"
 
 if [[ "$ECODE" != "0" ]]; then
-  echo "Failed to git clone https://github.com/common-workflow-language/common-workflow-language.git"
+  echo "Failed to git clone --depth 1 https://github.com/common-workflow-language/common-workflow-language.git"
   exit $ECODE
 fi
 
@@ -174,5 +174,14 @@ if [[ "$ECODE" != "0" ]]; then
 fi
 
 run_command shell.$IDENTIFIER ECODE "cd common-workflow-language; git pull; ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN ./run_test.sh RUNNER=/home/$ACCT/arvados-cwl-runner-with-checksum.sh "
+
+run_command shell.$IDENTIFIER ECODE "if [[ ! -e arvados ]]; then ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN git clone --depth 1 https://git.$IDENTIFIER.arvadosapi.com/arvados.git; fi"
+
+if [[ "$ECODE" != "0" ]]; then
+  echo "Failed to git clone --depth 1 git@git.$IDENTIFIER.arvadosapi.com:arvados.git"
+  exit $ECODE
+fi
+
+run_command shell.$IDENTIFIER ECODE "cd arvados/sdk/cwl/tests; git pull; ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN ./arvados-tests.sh"
 
 exit $ECODE
