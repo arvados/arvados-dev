@@ -21,7 +21,11 @@ function usage {
     echo >&2 "      --acct <username>         Account to log in with"
     echo >&2 "  -d, --debug                   Enable debug output"
     echo >&2 "  -h, --help                    Display this help and exit"
+    echo >&2 "  -s, --scopes                  Print required scopes to run tests"
     echo >&2
+}
+
+function print_scopes {
     echo >&2 " Required scope for the token used to run the tests:"
     echo >&2
     echo >&2 " arv api_client_authorization create_system_auth     --scopes "
@@ -49,13 +53,15 @@ function usage {
     echo >&2 "\"POST /arvados/v1/container_requests/\","
     echo >&2 "\"GET /arvados/v1/containers\","
     echo >&2 "\"GET /arvados/v1/containers/\","
+    echo >&2 "\"GET /arvados/v1/repositories\","
+    echo >&2 "\"GET /arvados/v1/repositories/\","
     echo >&2 "\"GET /arvados/v1/logs\" ]"
     echo >&2
 }
 
 # NOTE: This requires GNU getopt (part of the util-linux package on Debian-based distros).
-TEMP=`getopt -o hdp: \
-    --long help,debug,port:,acct: \
+TEMP=`getopt -o hdp:s \
+    --long help,scopes,debug,port:,acct: \
     -n "$0" -- "$@"`
 
 if [ $? != 0 ] ; then echo "Use -h for help"; exit 1 ; fi
@@ -74,6 +80,10 @@ do
         -d | --debug)
             DEBUG=1
             shift
+            ;;
+        -s | --scopes)
+            print_scopes
+            exit 0
             ;;
         --)
             shift
