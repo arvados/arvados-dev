@@ -176,7 +176,7 @@ if [[ "$ECODE" != "0" ]]; then
   exit $ECODE
 fi
 
-run_command shell.$IDENTIFIER ECODE "if [[ ! -e arvados-cwl-runner-with-checksum.sh ]]; then printf \"%s\n%s\n\" '#!/bin/sh' 'exec arvados-cwl-runner --compute-checksum \"\$@\"' > arvados-cwl-runner-with-checksum.sh; chmod 755 arvados-cwl-runner-with-checksum.sh; fi"
+run_command shell.$IDENTIFIER ECODE "printf \"%s\n%s\n\" '#!/bin/sh' 'exec arvados-cwl-runner --compute-checksum --disable-reuse \"\$@\"' > arvados-cwl-runner-with-checksum.sh; chmod 755 arvados-cwl-runner-with-checksum.sh"
 
 if [[ "$ECODE" != "0" ]]; then
   echo "Failed to create ~$ACCT/arvados-cwl-runner-with-checksum.sh"
