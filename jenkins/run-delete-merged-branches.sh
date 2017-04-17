@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash -x
 
 # Copyright (C) The Arvados Authors. All rights reserved.
 #
@@ -22,6 +22,7 @@ trap '_exit_handler $LINENO' EXIT ERR
 # IE: "keep_this_branch|also_this_other|and_this_one"
 branches_to_keep="master"
 
+git remote update --prune
 git checkout master
 
 git branch --remote --merged | \
