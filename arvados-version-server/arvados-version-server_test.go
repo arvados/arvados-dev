@@ -111,12 +111,22 @@ func waitForListener() {
 	}
 }
 
+func (s *ServerNotRequiredSuite) SetUpTest(c *C) {
+	// Discard standard log output
+	log.SetOutput(ioutil.Discard)
+}
+
 func (s *ServerRequiredSuite) SetUpTest(c *C) {
-	//arvadostest.ResetEnv()
+	// Discard standard log output
+	log.SetOutput(ioutil.Discard)
 }
 
 func (s *ServerRequiredSuite) TearDownSuite(c *C) {
-	//arvadostest.StopKeep(2)
+	log.SetOutput(os.Stderr)
+}
+
+func (s *ServerNotRequiredSuite) TearDownSuite(c *C) {
+	log.SetOutput(os.Stderr)
 }
 
 func (s *ServerRequiredSuite) TestResults(c *C) {
