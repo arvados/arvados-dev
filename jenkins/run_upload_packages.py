@@ -185,10 +185,10 @@ freight cache "apt/$DISTNAME"
 rm "$@"
 """
     TARGET_DISTNAMES = {
-        'debian8': 'jessie',
-        'ubuntu1204': 'precise',
-        'ubuntu1404': 'trusty',
-        'ubuntu1604': 'xenial',
+        'debian8': 'jessie-dev',
+        'ubuntu1204': 'precise-dev',
+        'ubuntu1404': 'trusty-dev',
+        'ubuntu1604': 'xenial-dev',
         }
 
     def post_uploads(self, paths):
@@ -207,7 +207,7 @@ createrepo "$REPODIR"
 """
     REPO_ROOT = '/var/www/rpm.arvados.org/'
     TARGET_REPODIRS = {
-        'centos7': 'CentOS/7/os/x86_64/',
+        'centos7-dev': 'CentOS/7/dev/x86_64/',
         }
 
     def post_uploads(self, paths):
