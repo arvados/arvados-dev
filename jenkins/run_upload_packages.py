@@ -207,7 +207,7 @@ createrepo "$REPODIR"
 """
     REPO_ROOT = '/var/www/rpm.arvados.org/'
     TARGET_REPODIRS = {
-        'centos7-dev': 'CentOS/7/dev/x86_64/',
+        'centos7': 'CentOS/7/os/x86_64/',
         }
 
     def post_uploads(self, paths):
