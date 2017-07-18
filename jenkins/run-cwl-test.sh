@@ -21,7 +21,11 @@ function usage {
     echo >&2 "      --acct <username>         Account to log in with"
     echo >&2 "  -d, --debug                   Enable debug output"
     echo >&2 "  -h, --help                    Display this help and exit"
+    echo >&2 "  -s, --scopes                  Print required scopes to run tests"
     echo >&2
+}
+
+function print_scopes {
     echo >&2 " Required scope for the token used to run the tests:"
     echo >&2
     echo >&2 " arv api_client_authorization create_system_auth     --scopes "
@@ -49,13 +53,15 @@ function usage {
     echo >&2 "\"POST /arvados/v1/container_requests/\","
     echo >&2 "\"GET /arvados/v1/containers\","
     echo >&2 "\"GET /arvados/v1/containers/\","
+    echo >&2 "\"GET /arvados/v1/repositories\","
+    echo >&2 "\"GET /arvados/v1/repositories/\","
     echo >&2 "\"GET /arvados/v1/logs\" ]"
     echo >&2
 }
 
 # NOTE: This requires GNU getopt (part of the util-linux package on Debian-based distros).
-TEMP=`getopt -o hdp: \
-    --long help,debug,port:,acct: \
+TEMP=`getopt -o hdp:s \
+    --long help,scopes,debug,port:,acct: \
     -n "$0" -- "$@"`
 
 if [ $? != 0 ] ; then echo "Use -h for help"; exit 1 ; fi
@@ -74,6 +80,10 @@ do
         -d | --debug)
             DEBUG=1
             shift
+            ;;
+        -s | --scopes)
+            print_scopes
+            exit 0
             ;;
         --)
             shift
@@ -166,7 +176,7 @@ if [[ "$ECODE" != "0" ]]; then
   exit $ECODE
 fi
 
-run_command shell.$IDENTIFIER ECODE "if [[ ! -e arvados-cwl-runner-with-checksum.sh ]]; then printf \"%s\n%s\n\" '#!/bin/sh' 'exec arvados-cwl-runner --compute-checksum \"\$@\"' > arvados-cwl-runner-with-checksum.sh; chmod 755 arvados-cwl-runner-with-checksum.sh; fi"
+run_command shell.$IDENTIFIER ECODE "printf \"%s\n%s\n\" '#!/bin/sh' 'exec arvados-cwl-runner --compute-checksum --disable-reuse \"\$@\"' > arvados-cwl-runner-with-checksum.sh; chmod 755 arvados-cwl-runner-with-checksum.sh"
 
 if [[ "$ECODE" != "0" ]]; then
   echo "Failed to create ~$ACCT/arvados-cwl-runner-with-checksum.sh"
@@ -175,6 +185,11 @@ fi
 
 run_command shell.$IDENTIFIER ECODE "cd common-workflow-language; git pull; ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN ./run_test.sh RUNNER=/home/$ACCT/arvados-cwl-runner-with-checksum.sh "
 
+if [[ "$ECODE" != "0" ]]; then
+  echo "Failed ./run_test.sh RUNNER=/home/$ACCT/arvados-cwl-runner-with-checksum.sh"
+  exit $ECODE
+fi
+
 run_command shell.$IDENTIFIER ECODE "if [[ ! -e arvados ]]; then ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN git clone --depth 1 https://git.$IDENTIFIER.arvadosapi.com/arvados.git; fi"
 
 if [[ "$ECODE" != "0" ]]; then
@@ -182,6 +197,6 @@ if [[ "$ECODE" != "0" ]]; then
   exit $ECODE
 fi
 
-run_command shell.$IDENTIFIER ECODE "cd arvados/sdk/cwl/tests; git pull; ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN ./arvados-tests.sh"
+run_command shell.$IDENTIFIER ECODE "cd arvados/sdk/cwl/tests; export ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN && git pull && ./arvados-tests.sh"
 
 exit $ECODE
