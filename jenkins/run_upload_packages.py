@@ -235,7 +235,7 @@ PACKAGE_SUITES = {
                           'services/login-sync/*.gem',
                       ),
     }
-for target in ['debian8', 'ubuntu1204', 'ubuntu1404', 'ubuntu1604']:
+for target in ['debian8', 'debian9', 'ubuntu1204', 'ubuntu1404', 'ubuntu1604']:
     PACKAGE_SUITES[target] = _define_suite(
         DebianPackageSuite, os.path.join('packages', target, '*.deb'),
         target=target)
