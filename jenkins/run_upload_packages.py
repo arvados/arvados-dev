@@ -38,8 +38,12 @@ def run_and_grep(cmd, read_output, *regexps,
     popen_kwargs[read_output] = subprocess.PIPE
     proc = subprocess.Popen(cmd, **popen_kwargs)
     with open(getattr(proc, read_output).fileno(), encoding=encoding) as output:
-        matched_lines = [line for line in output
-                         if any(regexp.search(line) for regexp in regexps)]
+        matched_lines = []
+        for line in output:
+            if any(regexp.search(line) for regexp in regexps):
+                matched_lines.append(line)
+            if read_output == 'stderr':
+                print(line, file=sys.stderr, end='')
     return proc.wait(), matched_lines
 
 
