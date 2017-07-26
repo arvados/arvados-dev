@@ -98,8 +98,12 @@ class PackageSuite:
 
 class PythonPackageSuite(PackageSuite):
     LOGGER_PART = 'python'
-    REUPLOAD_REGEXP = re.compile(
-        r'^error: Upload failed \(400\): A file named "[^"]+" already exists\b')
+    REUPLOAD_REGEXPS = [
+        re.compile(
+            r'^error: Upload failed \(400\): A file named "[^"]+" already exists\b'),
+        re.compile(
+            r'^error: Upload failed \(400\): File already exists\b'),
+    ]
 
     def __init__(self, glob_root, rel_globs):
         super().__init__(glob_root, rel_globs)
@@ -124,7 +128,7 @@ class PythonPackageSuite(PackageSuite):
             cmd.append('--quiet')
         cmd.extend(['sdist', '--dist-dir', '.upload_dist', 'upload'])
         upload_returncode, repushed = run_and_grep(
-            cmd, 'stderr', self.REUPLOAD_REGEXP, cwd=src_dir)
+            cmd, 'stderr', *self.REUPLOAD_REGEXPS, cwd=src_dir)
         if (upload_returncode != 0) and not repushed:
             raise subprocess.CalledProcessError(upload_returncode, cmd)
         shutil.rmtree(os.path.join(src_dir, '.upload_dist'))
