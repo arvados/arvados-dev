@@ -186,6 +186,7 @@ rm "$@"
 """
     TARGET_DISTNAMES = {
         'debian8': 'jessie-dev',
+        'debian9': 'stretch-dev',
         'ubuntu1204': 'precise-dev',
         'ubuntu1404': 'trusty-dev',
         'ubuntu1604': 'xenial-dev',
