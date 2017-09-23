@@ -103,6 +103,8 @@ class PythonPackageSuite(PackageSuite):
             r'^error: Upload failed \(400\): A file named "[^"]+" already exists\b'),
         re.compile(
             r'^error: Upload failed \(400\): File already exists\b'),
+        re.compile(
+            r'^error: Upload failed \(400\): Only one sdist may be uploaded per release\b'),
     ]
 
     def __init__(self, glob_root, rel_globs):
