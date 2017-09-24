@@ -423,7 +423,7 @@ func versionFromGit(prefix string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	cmdArgs := []string{"log", "-n1", "--first-parent", "--max-count=1", "--format=format:%h", "."}
+	cmdArgs := []string{"log", "-n1", "--first-parent", "--max-count=1", "--format=format:%h", "--abbrev=9", "."}
 	gitHash, err := exec.Command(theConfig.GitExecutablePath, cmdArgs...).Output()
 	if err != nil {
 		logError([]string{"There was an error running the command ", theConfig.GitExecutablePath, strings.Join(cmdArgs, " "), err.Error()})

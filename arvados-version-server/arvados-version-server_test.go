@@ -171,7 +171,7 @@ func (s *ServerRequiredSuite) TestResults(c *C) {
 		c.Check(err, Equals, nil)
 		c.Check(resp.StatusCode, Equals, 200)
 		body, err := ioutil.ReadAll(resp.Body)
-		c.Check(string(body), Matches, ".*\"arvados-src\":\"0.1.20130104011935.155848c\".*")
+		c.Check(string(body), Matches, ".*\"arvados-src\":\"0.1.20130104011935.155848c15\".*")
 	}
 
 	// Check the arvados-src version string for a more recent commit
@@ -184,7 +184,7 @@ func (s *ServerRequiredSuite) TestResults(c *C) {
 		c.Check(err, Equals, nil)
 		c.Check(resp.StatusCode, Equals, 200)
 		body, err := ioutil.ReadAll(resp.Body)
-		c.Check(string(body), Matches, ".*\"arvados-src\":\"0.1.20161208152419.9c1a287\".*")
+		c.Check(string(body), Matches, ".*\"arvados-src\":\"0.1.20161208152419.9c1a28719\".*")
 	}
 
 	// Check the arvados-src version string for a weirdly truncated commit
@@ -197,7 +197,7 @@ func (s *ServerRequiredSuite) TestResults(c *C) {
 		c.Check(err, Equals, nil)
 		c.Check(resp.StatusCode, Equals, 200)
 		body, err := ioutil.ReadAll(resp.Body)
-		c.Check(string(body), Matches, ".*\"arvados-src\":\"0.1.20161208152419.9c1a287\".*")
+		c.Check(string(body), Matches, ".*\"arvados-src\":\"0.1.20161208152419.9c1a28719\".*")
 	}
 
 	// Check an invalid request hash
