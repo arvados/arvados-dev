@@ -15,6 +15,7 @@ dirPath: "/tmp/arvados-version-server-checkout"
 cacheDirPath: "/tmp/arvados-version-server-cache"
 gitExecutablePath: "/usr/bin/git"
 listenPort: 8080
+shortHashLength: 7
 `)
 
 func usage(fs *flag.FlagSet) {

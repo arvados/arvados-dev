@@ -49,13 +49,14 @@ func (s *ServerNotRequiredSuite) TestConfig(c *C) {
 	c.Check(config.CacheDirPath, Equals, "")
 	c.Check(config.GitExecutablePath, Equals, "")
 	c.Check(config.ListenPort, Equals, "")
+	c.Check(config.ShortHashLength, Equals, "")
 
 	// Test parsing of config data
 	tmpfile, err := ioutil.TempFile(os.TempDir(), "config")
 	c.Check(err, IsNil)
 	defer os.Remove(tmpfile.Name())
 
-	argsS := `{"DirPath": "/x/y", "CacheDirPath": "/x/z", "GitExecutablePath": "/usr/local/bin/gitexecutable", "ListenPort": "12345"}`
+	argsS := `{"DirPath": "/x/y", "CacheDirPath": "/x/z", "GitExecutablePath": "/usr/local/bin/gitexecutable", "ListenPort": "12345", "ShortHashLength": "3"}`
 	_, err = tmpfile.Write([]byte(argsS))
 	c.Check(err, IsNil)
 
@@ -66,6 +67,7 @@ func (s *ServerNotRequiredSuite) TestConfig(c *C) {
 	c.Check(config.CacheDirPath, Equals, "/x/z")
 	c.Check(config.GitExecutablePath, Equals, "/usr/local/bin/gitexecutable")
 	c.Check(config.ListenPort, Equals, "12345")
+	c.Check(config.ShortHashLength, Equals, "3")
 
 }
 
@@ -83,7 +85,7 @@ func runServer(c *C) {
 
 	tmpConfigFileName = tmpfile.Name()
 
-	argsS := `{"DirPath": "", "CacheDirPath": "", "GitExecutablePath": "", "ListenPort": "12345"}`
+	argsS := `{"DirPath": "", "CacheDirPath": "", "GitExecutablePath": "", "ListenPort": "12345", "ShortHashLength": "9"}`
 	_, err = tmpfile.Write([]byte(argsS))
 	c.Check(err, IsNil)
 

@@ -62,6 +62,7 @@ type Config struct {
 	CacheDirPath      string
 	GitExecutablePath string
 	ListenPort        string
+	ShortHashLength   string
 
 	Packages []bundle
 }
@@ -423,7 +424,7 @@ func versionFromGit(prefix string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	cmdArgs := []string{"log", "-n1", "--first-parent", "--max-count=1", "--format=format:%h", "--abbrev=9", "."}
+	cmdArgs := []string{"log", "-n1", "--first-parent", "--max-count=1", "--format=format:%h", "--abbrev=" + theConfig.ShortHashLength, "."}
 	gitHash, err := exec.Command(theConfig.GitExecutablePath, cmdArgs...).Output()
 	if err != nil {
 		logError([]string{"There was an error running the command ", theConfig.GitExecutablePath, strings.Join(cmdArgs, " "), err.Error()})
@@ -709,7 +710,7 @@ func packageVersionHandler(w http.ResponseWriter, r *http.Request) {
 	hash := r.URL.Path[11:]
 
 	// Empty hash or non-standard hash length? Normalize it.
-	if len(hash) != 7 && len(hash) != 40 {
+	if string(len(hash)) != theConfig.ShortHashLength && len(hash) != 40 {
 		hash, err = normalizeRequestedHash(hash)
 		if err != nil {
 			m := report{"Error", err.Error()}
@@ -806,6 +807,10 @@ func main() {
 
 	if theConfig.ListenPort == "" {
 		theConfig.ListenPort = "80"
+	}
+
+	if theConfig.ShortHashLength == "" {
+		theConfig.ShortHashLength = "7"
 	}
 
 	http.HandleFunc("/v1/commit/", packageVersionHandler)
