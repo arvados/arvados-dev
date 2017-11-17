@@ -195,11 +195,11 @@ freight cache "apt/$DISTNAME"
 rm "$@"
 """
     TARGET_DISTNAMES = {
-        'debian8': 'jessie',
-        'debian9': 'stretch',
-        'ubuntu1204': 'precise',
-        'ubuntu1404': 'trusty',
-        'ubuntu1604': 'xenial',
+        'debian8': 'jessie-dev',
+        'debian9': 'stretch-dev',
+        'ubuntu1204': 'precise-dev',
+        'ubuntu1404': 'trusty-dev',
+        'ubuntu1604': 'xenial-dev',
         }
 
     def post_uploads(self, paths):
