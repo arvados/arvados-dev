@@ -212,8 +212,8 @@ if [[ "$ARVADOS_API_HOST" == "" ]] || [[ "$ARVADOS_API_TOKEN" == "" ]]; then
 fi
 
 title "Gathering list of shell and Keep nodes"
-SHELL_NODES=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv virtual_machine list |jq .items[].hostname -r`
-KEEP_NODES=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv keep_service list |jq .items[].service_host -r`
+SHELL_NODES=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN rvm-exec default arv virtual_machine list |jq .items[].hostname -r`
+KEEP_NODES=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN rvm-exec default arv keep_service list |jq .items[].service_host -r`
 
 nodes=""
 for n in workbench manage switchyard $SHELL_NODES $KEEP_NODES; do
