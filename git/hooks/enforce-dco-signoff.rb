@@ -13,7 +13,7 @@ $oldrev  = ARGV[1]
 $newrev  = ARGV[2]
 $user    = ENV['USER']
 
-puts "Enforcing DCO signoff... \n(#{$refname}) (#{$oldrev[0,6]}) (#{$newrev[0,6]})"
+puts "Enforcing DCO signoff: (#{$refname}) (#{$oldrev[0,6]}) (#{$newrev[0,6]})"
 
 $regex = /\[ref: (\d+)\]/
 
@@ -21,11 +21,26 @@ $arvados_DCO = /Arvados-DCO-1.1-Signed-off-by:/
 
 # enforced DCO signoff in commit message
 def check_message_format
-  all_revs    = `git rev-list --first-parent #{$oldrev}..#{$newrev}`.split("\n")
+  if ($newrev[0,6] ==  '000000')
+    # A branch is being deleted
+    all_revs    = [$oldrev]
+  elsif ($oldrev[0,6] ==  '000000')
+    if $refname != 'refs/heads/master'
+      # A new branch was pushed. Check all new commits in this branch.
+      all_revs  = `git log --pretty=format:%H master..#{$newrev}`.split("\n")
+    else
+      # When does this happen?
+      all_revs  = [$newrev]
+    end
+  else
+    all_revs    = `git rev-list --first-parent #{$oldrev}..#{$newrev}`.split("\n")
+  end
+
   broken = false
+
   all_revs.each do |rev|
     message = `git cat-file commit #{rev} | sed '1,/^$/d' | grep -E "Arvados-DCO-1.1-Signed-off-by: .+@.+\..+"`
-    puts message
+
     if ! $arvados_DCO.match(message)
       puts "\n[POLICY] Rejected commit: missing Arvados-DCO-1.1-Signed-off-by line"
       puts "\n******************************************************************\n"
