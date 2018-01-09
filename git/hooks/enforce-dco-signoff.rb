@@ -22,8 +22,8 @@ $arvados_DCO = /Arvados-DCO-1.1-Signed-off-by:/
 # enforced DCO signoff in commit message
 def check_message_format
   if ($newrev[0,6] ==  '000000')
-    # A branch is being deleted
-    all_revs    = [$oldrev]
+    # A branch is being deleted. Do not check old commits for DCO signoff!
+    all_revs    = []
   elsif ($oldrev[0,6] ==  '000000')
     if $refname != 'refs/heads/master'
       # A new branch was pushed. Check all new commits in this branch.
