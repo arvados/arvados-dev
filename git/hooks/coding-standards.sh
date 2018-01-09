@@ -18,7 +18,21 @@ $newrev  = ARGV[2]
 $user    = ENV['USER']
 
 def blacklist bl
-  all_revs = `git rev-list #{$oldrev}..#{$newrev}`.split("\n")
+  if ($newrev[0,6] ==  '000000')
+    # A branch is being deleted. Do not check old commits for DCO signoff!
+    all_revs    = []
+  elsif ($oldrev[0,6] ==  '000000')
+    if $refname != 'refs/heads/master'
+      # A new branch was pushed. Check all new commits in this branch.
+      all_revs  = `git log --pretty=format:%H master..#{$newrev}`.split("\n")
+    else
+      # When does this happen?
+      all_revs  = [$newrev]
+    end
+  else
+    all_revs    = `git rev-list #{$oldrev}..#{$newrev}`.split("\n")
+  end
+
   all_revs.each do |rev|
     bl.each do |b|
       if rev == b
