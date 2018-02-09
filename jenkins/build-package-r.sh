@@ -8,3 +8,4 @@ sed -i -e s/"^Version: .*$"/"Version: $VERNO"/g $WORKSPACE/sdk/R/DESCRIPTION
 cd $WORKSPACE/sdk/
 R CMD build R
 scp -p2222 $WORKSPACE/sdk/ArvadosR_"$VERNO".tar.gz jenkinsapt@public.curoverse.com:/var/www/r.arvados.org/src/contrib
+ssh -p2222 jenkinsapt@public.curoverse.com 'cd /var/www/r.arvados.org/src/contrib && R -q -e "tools::write_PACKAGES()'
