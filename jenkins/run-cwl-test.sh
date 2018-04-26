@@ -8,6 +8,7 @@ set -o pipefail
 
 DEBUG=0
 SSH_PORT=22
+JOBS=1
 ACCT=ci
 
 function usage {
@@ -22,6 +23,7 @@ function usage {
     echo >&2 "  -d, --debug                   Enable debug output"
     echo >&2 "  -h, --help                    Display this help and exit"
     echo >&2 "  -s, --scopes                  Print required scopes to run tests"
+    echo >&2 "  -j, --jobs <jobs>             Allow N jobs at once; 1 job with no arg."
     echo >&2
 }
 
@@ -61,7 +63,7 @@ function print_scopes {
 
 # NOTE: This requires GNU getopt (part of the util-linux package on Debian-based distros).
 TEMP=`getopt -o hdp:s \
-    --long help,scopes,debug,port:,acct: \
+    --long help,scopes,debug,port:,acct:,jobs: \
     -n "$0" -- "$@"`
 
 if [ $? != 0 ] ; then echo "Use -h for help"; exit 1 ; fi
@@ -84,6 +86,9 @@ do
         -s | --scopes)
             print_scopes
             exit 0
+            ;;
+        -j | --jobs)
+            JOBS="$2"; shift 2
             ;;
         --)
             shift
@@ -183,10 +188,10 @@ if [[ "$ECODE" != "0" ]]; then
   exit $ECODE
 fi
 
-run_command shell.$IDENTIFIER ECODE "cd common-workflow-language; git pull; ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN ./run_test.sh RUNNER=/home/$ACCT/arvados-cwl-runner-with-checksum.sh "
+run_command shell.$IDENTIFIER ECODE "cd common-workflow-language; git pull; ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN ./run_test.sh -j$JOBS RUNNER=/home/$ACCT/arvados-cwl-runner-with-checksum.sh"
 
 if [[ "$ECODE" != "0" ]]; then
-  echo "Failed ./run_test.sh RUNNER=/home/$ACCT/arvados-cwl-runner-with-checksum.sh"
+  echo "Failed ./run_test.sh -j$JOBS RUNNER=/home/$ACCT/arvados-cwl-runner-with-checksum.sh"
   exit $ECODE
 fi
 
