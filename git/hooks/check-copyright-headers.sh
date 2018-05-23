@@ -45,7 +45,7 @@ for rev in $(git rev-list --objects $2..$3 | git cat-file --batch-check='%(objec
   done
   if [[ ${ignore} = 1 ]]; then continue; fi
 
-  HEADER=`git show ${sha} | head -n20 | egrep -A3 -B1 'Copyright.*Arvados'`
+  HEADER=`git show ${sha} | head -n20 | egrep -A3 -B1 'Copyright.*All rights reserved.'`
 
   if [[ ! "$HEADER" =~ "SPDX-License-Identifier:" ]]; then
     if [[ "$EXITCODE" == "0" ]]; then
