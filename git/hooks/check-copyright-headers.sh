@@ -15,6 +15,8 @@ NEWREV=$3
 
 EXITCODE=0
 
+echo "Enforcing copyright headers..."
+
 # Load the .licenseignore file
 LICENSEIGNORE=`mktemp`
 git show ${NEWREV}:.licenseignore > "${LICENSEIGNORE}" 2>/dev/null
