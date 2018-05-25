@@ -30,7 +30,7 @@ rm -f $LICENSEIGNORE
 
 oldIFS="$IFS"
 IFS=$'\n'
-for rev in $(git rev-list --objects $2..$3 | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^blob //p'); do
+for rev in $(git rev-list --objects $OLDREV..$NEWREV --not --branches='*' | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^blob //p'); do
 
   IFS="$oldIFS" read -r -a array <<<"$rev"
   sha=${array[0]}
