@@ -38,6 +38,7 @@ function usage {
     echo >&2 "   <identifier>                 Arvados cluster name"
     echo >&2
     echo >&2 "$0 options:"
+    echo >&2 "  -n, --node <node>             Single machine to deploy, use fqdn, optional"
     echo >&2 "  -p, --port <ssh port>         SSH port to use (default 22)"
     echo >&2 "  -c, --concurrency <max>       Maximum concurrency for puppet runs (default 5)"
     echo >&2 "  -d, --debug                   Enable debug output"
@@ -51,8 +52,8 @@ function usage {
 
 
 # NOTE: This requires GNU getopt (part of the util-linux package on Debian-based distros).
-TEMP=`getopt -o hdp:c: \
-    --long help,debug,port:,concurrency: \
+TEMP=`getopt -o hdp:c:n: \
+    --long help,debug,port:,concurrency:,node: \
     -n "$0" -- "$@"`
 
 if [ $? != 0 ] ; then echo "Use -h for help"; exit 1 ; fi
@@ -62,6 +63,9 @@ eval set -- "$TEMP"
 while [ $# -ge 1 ]
 do
     case $1 in
+        -n | --node)
+            NODE="$2"; shift 2
+            ;;
         -p | --port)
             SSH_PORT="$2"; shift 2
             ;;
@@ -189,15 +193,22 @@ function run_command() {
   eval "$return_var=$ECODE"
 }
 
-title "Updating API server"
-SUM_ECODE=0
-run_puppet $IDENTIFIER.arvadosapi.com ECODE
-SUM_ECODE=$(($SUM_ECODE + $ECODE))
+if [[ "$NODE" == "" ]] || [[ "$NODE" == "$IDENTIFIER.arvadosapi.com" ]]; then
+  title "Updating API server"
+  SUM_ECODE=0
+  run_puppet $IDENTIFIER.arvadosapi.com ECODE
+  SUM_ECODE=$(($SUM_ECODE + $ECODE))
 
-if [[ "$SUM_ECODE" != "0" ]]; then
-  title "ERROR: Updating API server FAILED"
-  EXITCODE=$(($EXITCODE + $SUM_ECODE))
-  exit $EXITCODE
+  if [[ "$SUM_ECODE" != "0" ]]; then
+    title "ERROR: Updating API server FAILED"
+    EXITCODE=$(($EXITCODE + $SUM_ECODE))
+    exit $EXITCODE
+  fi
+fi
+
+if [[ "$NODE" == "$IDENTIFIER.arvadosapi.com" ]]; then
+	# we are done
+	exit 0
 fi
 
 title "Loading ARVADOS_API_HOST and ARVADOS_API_TOKEN"
@@ -225,67 +236,73 @@ for n in workbench manage switchyard $SHELL_NODES $KEEP_NODES; do
     # e.g. shell
     node=$n.$ARVADOS_API_HOST
   fi
-  # e.g. keep.qr1hi
-  nodes="$nodes ${node%.arvadosapi.com}"
+	if [[ "$NODE" == "" ]] || [[ "$NODE" == "$node" ]]; then
+	  # e.g. keep.qr1hi
+	  nodes="$nodes ${node%.arvadosapi.com}"
+	fi
 done
 
-## at this point nodes should be an array containing
-## manage.qr1hi,  keep.qr1hi, etc
-## that should be defined in the .ssh/config file
-title "Updating in parallel: $nodes"
-export -f run_puppet
-export -f title
-export SSH_PORT
-export PUPPET_AGENT
-echo $nodes|xargs -d " " -n 1 -P $PUPPET_CONCURRENCY -I {} bash -c "run_puppet {}"
+if [[ "$nodes" != "" ]]; then
+  ## at this point nodes should be an array containing
+  ## manage.qr1hi,  keep.qr1hi, etc
+  ## that should be defined in the .ssh/config file
+  title "Updating in parallel: $nodes"
+  export -f run_puppet
+  export -f title
+  export SSH_PORT
+  export PUPPET_AGENT
+  echo $nodes|xargs -d " " -n 1 -P $PUPPET_CONCURRENCY -I {} bash -c "run_puppet {}"
+fi
 
-title "Locating Arvados Standard Docker images project"
+if [[ "$NODE" == "" ]]; then
+  title "Locating Arvados Standard Docker images project"
 
-JSON_FILTER="[[\"name\", \"=\", \"Arvados Standard Docker Images\"], [\"owner_uuid\", \"=\", \"$IDENTIFIER-tpzed-000000000000000\"]]"
-DOCKER_IMAGES_PROJECT=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv --format=uuid group list --filters="$JSON_FILTER"`
+  JSON_FILTER="[[\"name\", \"=\", \"Arvados Standard Docker Images\"], [\"owner_uuid\", \"=\", \"$IDENTIFIER-tpzed-000000000000000\"]]"
+  DOCKER_IMAGES_PROJECT=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv --format=uuid group list --filters="$JSON_FILTER"`
 
-if [[ "$DOCKER_IMAGES_PROJECT" == "" ]]; then
-  title "Warning: Arvados Standard Docker Images project not found. Creating it."
+  if [[ "$DOCKER_IMAGES_PROJECT" == "" ]]; then
+    title "Warning: Arvados Standard Docker Images project not found. Creating it."
 
-  DOCKER_IMAGES_PROJECT=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv --format=uuid group create --group "{\"owner_uuid\":\"$IDENTIFIER-tpzed-000000000000000\", \"name\":\"Arvados Standard Docker Images\", \"group_class\":\"project\"}"`
-  ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv link create --link "{\"tail_uuid\":\"$IDENTIFIER-j7d0g-fffffffffffffff\", \"head_uuid\":\"$DOCKER_IMAGES_PROJECT\", \"link_class\":\"permission\", \"name\":\"can_read\" }"
-  if [[ "$?" != "0" ]]; then
-    title "ERROR: could not create standard Docker images project Please create it, cf. http://doc.arvados.org/install/create-standard-objects.html"
-    exit 1
+    DOCKER_IMAGES_PROJECT=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv --format=uuid group create --group "{\"owner_uuid\":\"$IDENTIFIER-tpzed-000000000000000\", \"name\":\"Arvados Standard Docker Images\", \"group_class\":\"project\"}"`
+    ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv link create --link "{\"tail_uuid\":\"$IDENTIFIER-j7d0g-fffffffffffffff\", \"head_uuid\":\"$DOCKER_IMAGES_PROJECT\", \"link_class\":\"permission\", \"name\":\"can_read\" }"
+    if [[ "$?" != "0" ]]; then
+      title "ERROR: could not create standard Docker images project Please create it, cf. http://doc.arvados.org/install/create-standard-objects.html"
+      exit 1
+    fi
   fi
-fi
 
-title "Found Arvados Standard Docker Images project with uuid $DOCKER_IMAGES_PROJECT"
-GIT_COMMIT=`ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "python -c 'import arvados_cwl ; print arvados_cwl.__version__'" 2>&1 |grep -v INFO:rdflib:RDFLib`
+  title "Found Arvados Standard Docker Images project with uuid $DOCKER_IMAGES_PROJECT"
+  GIT_COMMIT=`ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "python -c 'import arvados_cwl ; print arvados_cwl.__version__'" 2>&1 |grep -v INFO:rdflib:RDFLib`
 
-if [[ "$?" != "0" ]] || [[ "$GIT_COMMIT" == "" ]]; then
-  title "ERROR: unable to get arvados/jobs Docker image git revision"
-  exit 1
-else
-  title "Found git commit for arvados/jobs Docker image: $GIT_COMMIT"
-fi
-
-run_command shell.$IDENTIFIER ECODE "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN /usr/local/rvm/bin/rvm-exec default arv keep docker" |grep -q $GIT_COMMIT
-
-if [[ "$?" == "0" ]]; then
-  title "Found latest arvados/jobs Docker image, nothing to upload"
-  # Just in case it isn't yet, tag the image as latest
-  ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker arvados/jobs latest"
-else
-  title "Installing latest arvados/jobs Docker image"
-  ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN /usr/local/rvm/bin/rvm-exec default arv keep docker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $GIT_COMMIT"
-  ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER docker tag --force >/dev/null 2>&1
-  # docker 1.13 no longer supports --force. Sigh.
-  if [[ "$?" == "125" ]]; then
-    FORCE_TAG=""
+  if [[ "$?" != "0" ]] || [[ "$GIT_COMMIT" == "" ]]; then
+    title "ERROR: unable to get arvados/jobs Docker image git revision"
+    exit 1
   else
-    FORCE_TAG="--force"
+    title "Found git commit for arvados/jobs Docker image: $GIT_COMMIT"
   fi
-  ## adding latest tag too  refs 9254
-  ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER docker tag $FORCE_TAG arvados/jobs:$GIT_COMMIT arvados/jobs:latest
-  ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs latest"
-  if [[ "$?" -ne 0 ]]; then
-    title "'git pull' failed exiting..."
-    exit 1
+
+  run_command shell.$IDENTIFIER ECODE "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN /usr/local/rvm/bin/rvm-exec default arv keep docker" |grep -q $GIT_COMMIT
+
+  if [[ "$?" == "0" ]]; then
+    title "Found latest arvados/jobs Docker image, nothing to upload"
+    # Just in case it isn't yet, tag the image as latest
+    ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker arvados/jobs latest"
+  else
+    title "Installing latest arvados/jobs Docker image"
+    ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN /usr/local/rvm/bin/rvm-exec default arv keep docker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $GIT_COMMIT"
+    ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER docker tag --force >/dev/null 2>&1
+    # docker 1.13 no longer supports --force. Sigh.
+    if [[ "$?" == "125" ]]; then
+      FORCE_TAG=""
+    else
+      FORCE_TAG="--force"
+    fi
+    ## adding latest tag too  refs 9254
+    ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER docker tag $FORCE_TAG arvados/jobs:$GIT_COMMIT arvados/jobs:latest
+    ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs latest"
+    if [[ "$?" -ne 0 ]]; then
+      title "'git pull' failed exiting..."
+      exit 1
+    fi
   fi
 fi
