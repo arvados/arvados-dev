@@ -197,9 +197,9 @@ rm "$@"
     TARGET_DISTNAMES = {
         'debian8': 'jessie-dev',
         'debian9': 'stretch-dev',
-        'ubuntu1204': 'precise-dev',
         'ubuntu1404': 'trusty-dev',
         'ubuntu1604': 'xenial-dev',
+        'ubuntu1804': 'bionic-dev',
         }
 
     def post_uploads(self, paths):
@@ -245,7 +245,7 @@ PACKAGE_SUITES = {
                           'services/login-sync/*.gem',
                       ),
     }
-for target in ['debian8', 'debian9', 'ubuntu1204', 'ubuntu1404', 'ubuntu1604']:
+for target in ['debian8', 'debian9', 'ubuntu1404', 'ubuntu1604', 'ubuntu1804']:
     PACKAGE_SUITES[target] = _define_suite(
         DebianPackageSuite, os.path.join('packages', target, '*.deb'),
         target=target)
