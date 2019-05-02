@@ -272,7 +272,16 @@ if [[ "$NODE" == "" ]]; then
   fi
 
   title "Found Arvados Standard Docker Images project with uuid $DOCKER_IMAGES_PROJECT"
-  GIT_COMMIT=`ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "/usr/share/python2.7/dist/python-arvados-cwl-runner/bin/python -c 'import arvados_cwl ; print arvados_cwl.__version__'" 2>&1 |grep -v INFO:rdflib:RDFLib`
+
+	# from 1.4 onwards, we use the python executable that is part of the python-arvados-cwl-runner package
+  GIT_COMMIT=`ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "bash -s" <<EOF
+if [[ -e "/usr/share/python2.7/dist/python-arvados-cwl-runner/bin/python" ]]; then
+  /usr/share/python2.7/dist/python-arvados-cwl-runner/bin/python -c 'import arvados_cwl ; print arvados_cwl.__version__' 2>&1 |grep -v INFO:rdflib:RDFLib
+else
+  /usr/bin/python -c 'import arvados_cwl ; print arvados_cwl.__version__' 2>&1 |grep -v INFO:rdflib:RDFLib
+fi
+EOF
+`
 
   if [[ "$?" != "0" ]] || [[ "$GIT_COMMIT" == "" ]]; then
     title "ERROR: unable to get arvados/jobs Docker image git revision"
