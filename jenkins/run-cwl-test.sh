@@ -167,7 +167,7 @@ function run_command() {
       title "Connection denied or timed out"
     fi
   else
-    title "Running '${command/ARVADOS_API_TOKEN=*/ARVADOS_API_TOKEN=suppressed}' locally"
+    title "Running '${command/ARVADOS_API_TOKEN=* /ARVADOS_API_TOKEN=suppressed }' locally"
     TMP_FILE=`mktemp`
     if [[ "$DEBUG" != "0" ]]; then
       bash -c "$command" | tee $TMP_FILE
