@@ -99,6 +99,7 @@ EXITCODE=0
 COLUMNS=80
 
 PUPPET_AGENT='
+__rvm_unload
 now() { date +%s; }
 let endtime="$(now) + 600"
 while [ "$endtime" -gt "$(now)" ]; do
@@ -276,9 +277,9 @@ if [[ "$NODE" == "" ]]; then
 	# from 1.4 onwards, we use the python executable that is part of the python-arvados-cwl-runner package
   GIT_COMMIT=`ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "bash -s" <<EOF
 if [[ -e "/usr/share/python2.7/dist/python-arvados-cwl-runner/bin/python" ]]; then
-  /usr/share/python2.7/dist/python-arvados-cwl-runner/bin/python -c 'import arvados_cwl ; print arvados_cwl.__version__' 2>&1 |grep -v INFO:rdflib:RDFLib
+  /usr/share/python2.7/dist/python-arvados-cwl-runner/bin/python -c 'import arvados_cwl ; print arvados_cwl.__version__'
 else
-  /usr/bin/python -c 'import arvados_cwl ; print arvados_cwl.__version__' 2>&1 |grep -v INFO:rdflib:RDFLib
+  /usr/bin/python -c 'import arvados_cwl ; print arvados_cwl.__version__'
 fi
 EOF
 `
