@@ -291,7 +291,7 @@ EOF
     title "Found git commit for arvados/jobs Docker image: $GIT_COMMIT"
   fi
 
-  run_command shell.$IDENTIFIER ECODE "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN /usr/local/rvm/bin/rvm-exec default arv keep docker" |grep -q $GIT_COMMIT
+  run_command shell.$IDENTIFIER ECODE "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker" |grep -q $GIT_COMMIT
 
   if [[ "$?" == "0" ]]; then
     title "Found latest arvados/jobs Docker image, nothing to upload"
@@ -299,7 +299,7 @@ EOF
     ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker arvados/jobs latest"
   else
     title "Installing latest arvados/jobs Docker image"
-    ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN /usr/local/rvm/bin/rvm-exec default arv keep docker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $GIT_COMMIT"
+    ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $GIT_COMMIT"
     ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER docker tag --force >/dev/null 2>&1
     # docker 1.13 no longer supports --force. Sigh.
     if [[ "$?" == "125" ]]; then
