@@ -296,7 +296,8 @@ EOF
   if [[ "$?" == "0" ]]; then
     title "Found latest arvados/jobs Docker image, nothing to upload"
     # Just in case it isn't yet, tag the image as latest
-    ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker arvados/jobs latest"
+    title "Tag arvados/jobs Docker image $GIT_COMMIT as latest"
+    ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs latest"
   else
     title "Installing latest arvados/jobs Docker image"
     ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $GIT_COMMIT"
