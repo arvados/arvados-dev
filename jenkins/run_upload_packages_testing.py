@@ -197,6 +197,7 @@ rm "$@"
     TARGET_DISTNAMES = {
         'debian8': 'jessie-testing',
         'debian9': 'stretch-testing',
+        'debian10': 'buster-testing',
         'ubuntu1404': 'trusty-testing',
         'ubuntu1604': 'xenial-testing',
         'ubuntu1804': 'bionic-testing',
@@ -245,7 +246,7 @@ PACKAGE_SUITES = {
                           'services/login-sync/*.gem',
                       ),
     }
-for target in ['debian8', 'debian9', 'ubuntu1404', 'ubuntu1604', 'ubuntu1804']:
+for target in ['debian8', 'debian9', 'debian10', 'ubuntu1404', 'ubuntu1604', 'ubuntu1804']:
     PACKAGE_SUITES[target] = _define_suite(
         DebianPackageSuite, os.path.join('packages', target, '*.deb'),
         target=target)
