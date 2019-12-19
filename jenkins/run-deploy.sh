@@ -312,7 +312,7 @@ EOF
     ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER docker tag $FORCE_TAG arvados/jobs:$GIT_COMMIT arvados/jobs:latest
     ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs latest"
     if [[ "$?" -ne 0 ]]; then
-      title "'git pull' failed exiting..."
+      title "'arv-keepdocker' failed, exit code $?..."
       exit 1
     fi
   fi
