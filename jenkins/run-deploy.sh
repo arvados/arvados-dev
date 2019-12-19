@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 
 DEBUG=0
+UNMANAGED=0
 SSH_PORT=22
 PUPPET_CONCURRENCY=5
 
@@ -41,6 +42,7 @@ function usage {
     echo >&2 "  -n, --node <node>             Single machine to deploy, use fqdn, optional"
     echo >&2 "  -p, --port <ssh port>         SSH port to use (default 22)"
     echo >&2 "  -c, --concurrency <max>       Maximum concurrency for puppet runs (default 5)"
+    echo >&2 "  -u, --unmanaged               Deploy to unmanaged node/cluster"
     echo >&2 "  -d, --debug                   Enable debug output"
     echo >&2 "  -h, --help                    Display this help and exit"
     echo >&2
@@ -52,8 +54,8 @@ function usage {
 
 
 # NOTE: This requires GNU getopt (part of the util-linux package on Debian-based distros).
-TEMP=`getopt -o hdp:c:n: \
-    --long help,debug,port:,concurrency:,node: \
+TEMP=`getopt -o hudp:c:n: \
+    --long help,unmanaged,debug,port:,concurrency:,node: \
     -n "$0" -- "$@"`
 
 if [ $? != 0 ] ; then echo "Use -h for help"; exit 1 ; fi
@@ -71,6 +73,10 @@ do
             ;;
         -c | --concurrency)
             PUPPET_CONCURRENCY="$2"; shift 2
+            ;;
+        -u | --unmanaged)
+            UNMANAGED=1
+            shift
             ;;
         -d | --debug)
             DEBUG=1
@@ -114,9 +120,69 @@ done
 exit ${agent_exitcode:-99}
 '
 
+APT_AGENT='
+now() { date +%s; }
+let endtime="$(now) + 600"
+while [ "$endtime" -gt "$(now)" ]; do
+  apt-get update
+  apt-get -y upgrade
+  apt_exitcode=$?
+  if [ 0 = "$apt_exitcode" ]; then
+    break
+  else
+    sleep 10s
+  fi
+done
+exit ${apt_exitcode:-99}
+'
+
 title () {
   date=`date +'%Y-%m-%d %H:%M:%S'`
   printf "$date $1\n"
+}
+
+function update_node() {
+  if [[ $UNMANAGED -ne 0 ]]; then
+    run_apt $@
+  else
+    run_puppet $@
+  fi
+}
+
+function run_apt() {
+  node=$1
+
+  title "Running apt on $node"
+  sleep $[ $RANDOM / 6000 ].$[ $RANDOM / 1000 ]
+  TMP_FILE=`mktemp`
+  if [[ "$DEBUG" != "0" ]]; then
+    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 5" root@$node -C bash -c "'$APT_AGENT'" | tee $TMP_FILE
+  else
+    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 5" root@$node -C bash -c "'$APT_AGENT'" > $TMP_FILE 2>&1
+  fi
+
+  ECODE=${PIPESTATUS[0]}
+  RESULT=$(cat $TMP_FILE)
+
+  if [[ "$ECODE" != "255" && "$ECODE" != "0"  ]]; then
+    # Ssh exits 255 if the connection timed out. Just ignore that.
+    echo "ERROR running apt on $node: exit code $ECODE"
+    if [[ "$DEBUG" == "0" ]]; then
+      title "Command output follows:"
+      echo $RESULT
+    fi
+  fi
+  if [[ "$ECODE" == "255" ]]; then
+    title "Connection timed out"
+    ECODE=0
+  fi
+
+  if [[ "$ECODE" == "0" ]]; then
+      rm -f $TMP_FILE
+      echo $node successfully updated
+  else
+      echo $node exit code: $ECODE see $TMP_FILE for details
+  fi
 }
 
 function run_puppet() {
@@ -155,16 +221,16 @@ function run_puppet() {
 
   if [[ "$ECODE" == "0" ]]; then
       rm -f $TMP_FILE
-      echo $node successfully updates
+      echo $node successfully updated
   else
       echo $node exit code: $ECODE see $TMP_FILE for details
   fi
 }
 
 function run_command() {
-  node=$1
-  return_var=$2
-  command=$3
+  node=$1;shift
+  return_var=$1;shift
+  command=$@
 
   title "Running '$command' on $node"
   TMP_FILE=`mktemp`
@@ -197,7 +263,7 @@ function run_command() {
 if [[ "$NODE" == "" ]] || [[ "$NODE" == "$IDENTIFIER.arvadosapi.com" ]]; then
   title "Updating API server"
   SUM_ECODE=0
-  run_puppet $IDENTIFIER.arvadosapi.com ECODE
+  update_node $IDENTIFIER.arvadosapi.com ECODE
   SUM_ECODE=$(($SUM_ECODE + $ECODE))
 
   if [[ "$SUM_ECODE" != "0" ]]; then
@@ -223,12 +289,19 @@ if [[ "$ARVADOS_API_HOST" == "" ]] || [[ "$ARVADOS_API_TOKEN" == "" ]]; then
   exit 1
 fi
 
-title "Gathering list of shell and Keep nodes"
-SHELL_NODES=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv virtual_machine list |jq .items[].hostname -r`
-KEEP_NODES=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv keep_service list |jq .items[].service_host -r`
+title "Gathering list of nodes"
+if [[ "$IDENTIFIER" == "ce8i5" ]]; then
+  start_nodes="keep keep0"
+  SHELL_NODE_FOR_ARV_KEEPDOCKER=""
+else
+  SHELL_NODES=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv virtual_machine list |jq .items[].hostname -r`
+  KEEP_NODES=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv keep_service list |jq .items[].service_host -r`
+  SHELL_NODE_FOR_ARV_KEEPDOCKER="shell.$IDENTIFIER"
+  start_nodes="workbench manage switchyard $SHELL_NODES $KEEP_NODES"
+fi
 
 nodes=""
-for n in workbench manage switchyard $SHELL_NODES $KEEP_NODES; do
+for n in $start_nodes; do
   ECODE=0
   if [[ $n =~ $ARVADOS_API_HOST$ ]]; then
     # e.g. keep.qr1hi.arvadosapi.com
@@ -248,11 +321,15 @@ if [[ "$nodes" != "" ]]; then
   ## manage.qr1hi,  keep.qr1hi, etc
   ## that should be defined in the .ssh/config file
   title "Updating in parallel: $nodes"
+  export -f update_node
   export -f run_puppet
+  export -f run_apt
   export -f title
   export SSH_PORT
   export PUPPET_AGENT
-  echo $nodes|xargs -d " " -n 1 -P $PUPPET_CONCURRENCY -I {} bash -c "run_puppet {}"
+  export APT_AGENT
+  export UNMANAGED
+  echo $nodes|xargs -d " " -n 1 -P $PUPPET_CONCURRENCY -I {} bash -c "update_node {}"
 fi
 
 if [[ "$NODE" == "" ]]; then
@@ -274,46 +351,68 @@ if [[ "$NODE" == "" ]]; then
 
   title "Found Arvados Standard Docker Images project with uuid $DOCKER_IMAGES_PROJECT"
 
-	# from 1.4 onwards, we use the python executable that is part of the python-arvados-cwl-runner package
-  GIT_COMMIT=`ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "bash -s" <<EOF
-if [[ -e "/usr/share/python2.7/dist/python-arvados-cwl-runner/bin/python" ]]; then
-  /usr/share/python2.7/dist/python-arvados-cwl-runner/bin/python -c 'import arvados_cwl ; print arvados_cwl.__version__'
-else
-  /usr/bin/python -c 'import arvados_cwl ; print arvados_cwl.__version__'
-fi
-EOF
-`
+  VERSION=`ssh -o "StrictHostKeyChecking no" $IDENTIFIER apt-cache policy python-arvados-cwl-runner|grep Candidate`
+  VERSION=`echo $VERSION|cut -f2 -d' '|cut -f1 -d-`
 
-  if [[ "$?" != "0" ]] || [[ "$GIT_COMMIT" == "" ]]; then
-    title "ERROR: unable to get arvados/jobs Docker image git revision"
+  if [[ "$?" != "0" ]] || [[ "$VERSION" == "" ]]; then
+    title "ERROR: unable to get arvados/jobs Docker image version"
     exit 1
   else
-    title "Found git commit for arvados/jobs Docker image: $GIT_COMMIT"
+    title "Found version for arvados/jobs Docker image: $VERSION"
   fi
 
-  run_command shell.$IDENTIFIER ECODE "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker" |grep -q $GIT_COMMIT
-
-  if [[ "$?" == "0" ]]; then
-    title "Found latest arvados/jobs Docker image, nothing to upload"
-    # Just in case it isn't yet, tag the image as latest
-    title "Tag arvados/jobs Docker image $GIT_COMMIT as latest"
-    ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs latest"
-  else
-    title "Installing latest arvados/jobs Docker image"
-    ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $GIT_COMMIT"
-    ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER docker tag --force >/dev/null 2>&1
-    # docker 1.13 no longer supports --force. Sigh.
-    if [[ "$?" == "125" ]]; then
-      FORCE_TAG=""
+  if [[ "$SHELL_NODE_FOR_ARV_KEEPDOCKER" == "" ]]; then
+    ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker |grep -q $VERSION
+    if [[ "$?" == "0" ]]; then
+      title "Found latest arvados/jobs Docker image, nothing to upload"
+      # Just in case it isn't yet, tag the image as latest
+      title "Tag arvados/jobs Docker image $VERSION as latest"
+      ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs latest
+      if [[ $? -ne 0 ]]; then
+        title "'arv-keepdocker' failed..."
+        exit 1
+      fi
     else
-      FORCE_TAG="--force"
+      title "Installing latest arvados/jobs Docker image"
+      ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $VERSION
+      if [[ $? -ne 0 ]]; then
+        title "'arv-keepdocker' failed..."
+        exit 1
+      fi
+      ## adding latest tag too  refs 9254
+      docker tag arvados/jobs:$VERSION arvados/jobs:latest
+      ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs latest
+      if [[ $? -ne 0 ]]; then
+        title "'arv-keepdocker' failed..."
+        exit 1
+      fi
     fi
-    ## adding latest tag too  refs 9254
-    ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER docker tag $FORCE_TAG arvados/jobs:$GIT_COMMIT arvados/jobs:latest
-    ssh -o "StrictHostKeyChecking no" shell.$IDENTIFIER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs latest"
-    if [[ "$?" -ne 0 ]]; then
-      title "'arv-keepdocker' failed, exit code $?..."
-      exit 1
+  else
+    run_command $SHELL_NODE_FOR_ARV_KEEPDOCKER ECODE "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker" |grep -q $VERSION
+
+    if [[ "$?" == "0" ]]; then
+      title "Found latest arvados/jobs Docker image, nothing to upload"
+      # Just in case it isn't yet, tag the image as latest
+      title "Tag arvados/jobs Docker image $VERSION as latest"
+      ssh -o "StrictHostKeyChecking no" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs latest"
+      if [[ $? -ne 0 ]]; then
+        title "'arv-keepdocker' failed..."
+        exit 1
+      fi
+    else
+      title "Installing latest arvados/jobs Docker image"
+      ssh -o "StrictHostKeyChecking no" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $VERSION"
+      if [[ $? -ne 0 ]]; then
+        title "'arv-keepdocker' failed..."
+        exit 1
+      fi
+      ## adding latest tag too  refs 9254
+      ssh -o "StrictHostKeyChecking no" $SHELL_NODE_FOR_ARV_KEEPDOCKER docker tag arvados/jobs:$VERSION arvados/jobs:latest
+      ssh -o "StrictHostKeyChecking no" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs latest"
+      if [[ $? -ne 0 ]]; then
+        title "'arv-keepdocker' failed..."
+        exit 1
+      fi
     fi
   fi
 fi
