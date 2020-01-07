@@ -257,6 +257,7 @@ function run_command() {
     ECODE=0
   fi
   rm -f $TMP_FILE
+  echo $RESULT
   eval "$return_var=$ECODE"
 }
 
