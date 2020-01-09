@@ -31,7 +31,7 @@ fi
 
 # Sanitize the vars in a way suitable to be used by the remote 'publish_packages.sh' script
 # Just to make copying a single line, and not having to loop over it
-PACKAGES_LIST=$(echo ${PACKAGES_TO_PUBLISH}\* | sed 's/[a-z-]*-gem: [0-9\.]*//g; s/versions://g; s/\([0-9]\)[$, ]/\1* /g; s/[[:blank:]]\+/,/g; s/^,//g; s/:,/*/g')
+PACKAGES_LIST=$(echo ${PACKAGES_TO_PUBLISH} | sed 's/versions://g; s/\([a-z-]*\):[[:blank:]]*\([0-9.-]*\)/\1*\2*,/g; s/[[:blank:]]//g; s/,$//g;')
 
 DISTROS=$(echo "${LSB_DISTRIB_CODENAMES}"|sed s/[[:space:]]/,/g |tr '[:upper:]' '[:lower:]')
 
