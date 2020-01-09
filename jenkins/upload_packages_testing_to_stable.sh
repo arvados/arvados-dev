@@ -7,6 +7,8 @@
 # Parameters: list of packages, space separated, to move from *-testing to *
 # under /var/lib/freight/apt/ in host public.curoverse.com
 
+set -x
+
 APT_REPO_SERVER="apt.arvados.org"
 RPM_REPO_SERVER="rpm.arvados.org"
 
@@ -29,7 +31,7 @@ fi
 
 # Sanitize the vars in a way suitable to be used by the remote 'publish_packages.sh' script
 # Just to make copying a single line, and not having to loop over it
-PACKAGES_LIST=$(echo ${PACKAGES_TO_PUBLISH} | sed 's/[a-z-]*-gem: [0-9\.]*//g; s/versions://g; s/\([0-9]\)[$, ]/\1* /g; s/[[:blank:]]\+/,/g; s/^,//g; s/:,/*/g')
+PACKAGES_LIST=$(echo ${PACKAGES_TO_PUBLISH}\* | sed 's/[a-z-]*-gem: [0-9\.]*//g; s/versions://g; s/\([0-9]\)[$, ]/\1* /g; s/[[:blank:]]\+/,/g; s/^,//g; s/:,/*/g')
 
 DISTROS=$(echo "${LSB_DISTRIB_CODENAMES}"|sed s/[[:space:]]/,/g |tr '[:upper:]' '[:lower:]')
 
@@ -51,6 +53,7 @@ ssh -t \
     -o "ConnectTimeout 5" \
     ${REPO_SERVER} \
     "${REMOTE_CMD}" | tee ${TMP_FILE}
+ECODE=$?
 
 grep -q "FAILED TO PUBLISH" ${TMP_FILE}
 if [ $? -eq 0 ]; then

@@ -147,6 +147,7 @@ function run_command() {
     title "Running '${command/ARVADOS_API_TOKEN=* /ARVADOS_API_TOKEN=suppressed }' on $node"
     TMP_FILE=`mktemp`
     if [[ "$DEBUG" != "0" ]]; then
+      echo ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $ACCT@$node -C "$command" | tee $TMP_FILE
       ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $ACCT@$node -C "$command" | tee $TMP_FILE
       ECODE=$?
     else
