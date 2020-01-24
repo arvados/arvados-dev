@@ -267,7 +267,7 @@ def parse_arguments(arguments):
     parser.add_argument('--verbose', '-v', action='count', default=0,
                         help="Log more information and subcommand output")
     parser.add_argument(
-        '--repo', choices=['dev', 'testing']
+        '--repo', choices=['dev', 'testing'],
         help="Whether to upload to dev (nightly) or testing (release candidate) repository")
 
     parser.add_argument(
@@ -280,6 +280,16 @@ def parse_arguments(arguments):
 
     if args.workspace is None:
         parser.error("workspace not set from command line or environment")
+
+    for target in ['debian8', 'debian9', 'debian10', 'ubuntu1404', 'ubuntu1604', 'ubuntu1804']:
+        PACKAGE_SUITES[target] = _define_suite(
+            DebianPackageSuite, os.path.join('packages', target, '*.deb'),
+            target=target, repo=args.repo)
+    for target in ['centos7']:
+        PACKAGE_SUITES[target] = _define_suite(
+            RedHatPackageSuite, os.path.join('packages', target, '*.rpm'),
+            target=target, repo=args.repo)
+
     for target in args.targets:
         try:
             suite_class = PACKAGE_SUITES[target].func
@@ -310,15 +320,6 @@ def build_suite_and_upload(target, since_timestamp, args):
 def main(arguments, stdout=sys.stdout, stderr=sys.stderr):
     args = parse_arguments(arguments)
     setup_logger(stderr, args)
-
-    for target in ['debian8', 'debian9', 'debian10', 'ubuntu1404', 'ubuntu1604', 'ubuntu1804']:
-        PACKAGE_SUITES[target] = _define_suite(
-            DebianPackageSuite, os.path.join('packages', target, '*.deb'),
-            target=target, repo=args.repo)
-    for target in ['centos7']:
-        PACKAGE_SUITES[target] = _define_suite(
-            RedHatPackageSuite, os.path.join('packages', target, '*.rpm'),
-            target=target, repo=args.repo)
 
     for target in args.targets:
         ts_file = TimestampFile(os.path.join(args.workspace, 'packages',
