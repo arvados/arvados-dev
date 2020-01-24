@@ -194,14 +194,17 @@ freight add "$@" "apt/$DISTNAME"
 freight cache "apt/$DISTNAME"
 rm "$@"
 """
-    TARGET_DISTNAMES = {
-        'debian8': 'jessie-dev',
-        'debian9': 'stretch-dev',
-        'debian10': 'buster-dev',
-        'ubuntu1404': 'trusty-dev',
-        'ubuntu1604': 'xenial-dev',
-        'ubuntu1804': 'bionic-dev',
-        }
+
+    def __init__(self, glob_root, rel_globs, target, ssh_host, ssh_opts, repo):
+        super().__init__(glob_root, rel_globs, target, ssh_host, ssh_opts)
+        self.TARGET_DISTNAMES = {
+            'debian8': 'jessie-'+repo,
+            'debian9': 'stretch-'+repo,
+            'debian10': 'buster-'+repo,
+            'ubuntu1404': 'trusty-'+repo,
+            'ubuntu1604': 'xenial-'+repo,
+            'ubuntu1804': 'bionic-'+repo,
+            }
 
     def post_uploads(self, paths):
         self._run_script(self.FREIGHT_SCRIPT, self.REMOTE_DEST_DIR + '/' + self.target,
@@ -218,8 +221,11 @@ mv "$@" "$REPODIR"
 createrepo "$REPODIR"
 """
     REPO_ROOT = '/var/www/rpm.arvados.org/'
-    TARGET_REPODIRS = {
-        'centos7': 'CentOS/7/dev/x86_64/',
+
+    def __init__(self, glob_root, rel_globs, target, ssh_host, ssh_opts, repo):
+        super().__init__(glob_root, rel_globs, target, ssh_host, ssh_opts)
+        self.TARGET_REPODIRS = {
+            'centos7': 'CentOS/7/%s/x86_64/' % repo,
         }
 
     def post_uploads(self, paths):
@@ -246,18 +252,9 @@ PACKAGE_SUITES = {
                           'services/login-sync/*.gem',
                       ),
     }
-for target in ['debian8', 'debian9', 'debian10', 'ubuntu1404', 'ubuntu1604', 'ubuntu1804']:
-    PACKAGE_SUITES[target] = _define_suite(
-        DebianPackageSuite, os.path.join('packages', target, '*.deb'),
-        target=target)
-for target in ['centos7']:
-    PACKAGE_SUITES[target] = _define_suite(
-        RedHatPackageSuite, os.path.join('packages', target, '*.rpm'),
-        target=target)
 
 def parse_arguments(arguments):
     parser = argparse.ArgumentParser(
-        prog="run_upload_packages.py",
         description="Upload Arvados packages to various repositories")
     parser.add_argument(
         '--workspace', '-W', default=os.environ.get('WORKSPACE'),
@@ -269,6 +266,10 @@ def parse_arguments(arguments):
                          metavar='OPTION', help="Pass option to `ssh -o`")
     parser.add_argument('--verbose', '-v', action='count', default=0,
                         help="Log more information and subcommand output")
+    parser.add_argument(
+        '--repo', choices=['dev', 'testing']
+        help="Whether to upload to dev (nightly) or testing (release candidate) repository")
+
     parser.add_argument(
         'targets', nargs='*', default=['all'], metavar='target',
         help="Upload packages to these targets (default all)\nAvailable targets: " +
@@ -309,6 +310,16 @@ def build_suite_and_upload(target, since_timestamp, args):
 def main(arguments, stdout=sys.stdout, stderr=sys.stderr):
     args = parse_arguments(arguments)
     setup_logger(stderr, args)
+
+    for target in ['debian8', 'debian9', 'debian10', 'ubuntu1404', 'ubuntu1604', 'ubuntu1804']:
+        PACKAGE_SUITES[target] = _define_suite(
+            DebianPackageSuite, os.path.join('packages', target, '*.deb'),
+            target=target, repo=args.repo)
+    for target in ['centos7']:
+        PACKAGE_SUITES[target] = _define_suite(
+            RedHatPackageSuite, os.path.join('packages', target, '*.rpm'),
+            target=target, repo=args.repo)
+
     for target in args.targets:
         ts_file = TimestampFile(os.path.join(args.workspace, 'packages',
                                              '.last_upload_%s' % target))
