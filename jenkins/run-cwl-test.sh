@@ -216,7 +216,7 @@ if [[ "$ECODE" != "0" ]]; then
   exit $ECODE
 fi
 
-run_command shell.$IDENTIFIER ECODE "printf \"%s\n%s\n\" '#!/bin/sh' 'exec arvados-cwl-runner --api containers --compute-checksum --disable-reuse \"\$@\"' > ~$ACCT/arvados-cwl-runner-with-checksum.sh; chmod 755 ~$ACCT/arvados-cwl-runner-with-checksum.sh"
+run_command shell.$IDENTIFIER ECODE "printf \"%s\n%s\n\" '#!/bin/sh' 'exec arvados-cwl-runner --api containers --compute-checksum --disable-reuse --eval-timeout 40 \"\$@\"' > ~$ACCT/arvados-cwl-runner-with-checksum.sh; chmod 755 ~$ACCT/arvados-cwl-runner-with-checksum.sh"
 
 if [[ "$ECODE" != "0" ]]; then
   echo "Failed to create ~$ACCT/arvados-cwl-runner-with-checksum.sh"
@@ -230,10 +230,10 @@ if [[ "$ECODE" != "0" ]]; then
   exit $ECODE
 fi
 
-run_command shell.$IDENTIFIER ECODE "if [[ ! -e arvados ]]; then ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN ARVADOS_API_HOST_INSECURE=$ARVADOS_API_HOST_INSECURE git clone --depth 1 https://github.com/curoverse/arvados.git; fi"
+run_command shell.$IDENTIFIER ECODE "if [[ ! -e arvados ]]; then ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN ARVADOS_API_HOST_INSECURE=$ARVADOS_API_HOST_INSECURE git clone --depth 1 https://github.com/arvados/arvados.git; fi"
 
 if [[ "$ECODE" != "0" ]]; then
-  echo "Failed to git clone --depth 1 https://github.com/curoverse/arvados.git"
+  echo "Failed to git clone --depth 1 https://git.arvados.org/arvados.git"
   exit $ECODE
 fi
 
