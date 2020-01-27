@@ -216,7 +216,7 @@ if [[ "$ECODE" != "0" ]]; then
   exit $ECODE
 fi
 
-run_command shell.$IDENTIFIER ECODE "printf \"%s\n%s\n\" '#!/bin/sh' 'exec arvados-cwl-runner --api containers --compute-checksum --disable-reuse --eval-timeout 40 \"\$@\"' > ~$ACCT/arvados-cwl-runner-with-checksum.sh; chmod 755 ~$ACCT/arvados-cwl-runner-with-checksum.sh"
+run_command shell.$IDENTIFIER ECODE "printf \"%s\n%s\n\" '#!/bin/sh' 'exec arvados-cwl-runner --api containers --compute-checksum --disable-reuse --eval-timeout 60 \"\$@\"' > ~$ACCT/arvados-cwl-runner-with-checksum.sh; chmod 755 ~$ACCT/arvados-cwl-runner-with-checksum.sh"
 
 if [[ "$ECODE" != "0" ]]; then
   echo "Failed to create ~$ACCT/arvados-cwl-runner-with-checksum.sh"
