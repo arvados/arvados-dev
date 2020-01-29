@@ -80,6 +80,7 @@ do
             ;;
         -d | --debug)
             DEBUG=1
+            set -x
             shift
             ;;
         --)
@@ -292,7 +293,7 @@ fi
 
 title "Gathering list of nodes"
 if [[ "$IDENTIFIER" == "ce8i5" ]]; then
-  start_nodes="keep keep0 shell"
+  start_nodes="keep keep0 shell workbench2"
   SHELL_NODE_FOR_ARV_KEEPDOCKER=""
 else
   SHELL_NODES=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv virtual_machine list |jq .items[].hostname -r`
