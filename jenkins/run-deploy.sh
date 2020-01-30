@@ -292,15 +292,14 @@ if [[ "$ARVADOS_API_HOST" == "" ]] || [[ "$ARVADOS_API_TOKEN" == "" ]]; then
 fi
 
 title "Gathering list of nodes"
-if [[ "$IDENTIFIER" == "ce8i5" ]]; then
-  start_nodes="keep keep0 shell workbench2"
-  SHELL_NODE_FOR_ARV_KEEPDOCKER=""
-else
-  SHELL_NODES=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv virtual_machine list |jq .items[].hostname -r`
-  KEEP_NODES=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv keep_service list |jq .items[].service_host -r`
-  SHELL_NODE_FOR_ARV_KEEPDOCKER="shell.$IDENTIFIER"
-  start_nodes="workbench manage switchyard $SHELL_NODES $KEEP_NODES"
+start_nodes="workbench"
+if [[ "$IDENTIFIER" != "ce8i5" ]]; then
+  start_nodes="$start_nodes manage switchyard"
 fi
+SHELL_NODES=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv virtual_machine list |jq .items[].hostname -r`
+KEEP_NODES=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv keep_service list |jq .items[].service_host -r`
+SHELL_NODE_FOR_ARV_KEEPDOCKER="shell.$IDENTIFIER"
+start_nodes="$start_nodes $SHELL_NODES $KEEP_NODES $ARVADOS_API_HOST"
 
 nodes=""
 for n in $start_nodes; do
