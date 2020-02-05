@@ -228,40 +228,6 @@ function run_puppet() {
   fi
 }
 
-function run_command() {
-  node=$1;shift
-  return_var=$1;shift
-  command=$@
-
-  title "Running '$command' on $node"
-  TMP_FILE=`mktemp`
-  if [[ "$DEBUG" != "0" ]]; then
-    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" root@$node -C "$command" | tee $TMP_FILE
-  else
-    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" root@$node -C "$command" > $TMP_FILE 2>&1
-  fi
-
-  ECODE=$?
-  RESULT=$(cat $TMP_FILE)
-
-  if [[ "$ECODE" != "255" && "$ECODE" != "0"  ]]; then
-    # Ssh exists 255 if the connection timed out. Just ignore that, it's possible that this node is
-    #   a shell node that is down.
-    title "ERROR running command on $node: exit code $ECODE"
-    if [[ "$DEBUG" == "0" ]]; then
-      title "Command output follows:"
-      echo $RESULT
-    fi
-  fi
-  if [[ "$ECODE" == "255" ]]; then
-    title "Connection timed out"
-    ECODE=0
-  fi
-  rm -f $TMP_FILE
-  echo $RESULT
-  eval "$return_var=$ECODE"
-}
-
 if [[ "$NODE" == "" ]] || [[ "$NODE" == "$IDENTIFIER.arvadosapi.com" ]]; then
   title "Updating API server"
   SUM_ECODE=0
@@ -389,9 +355,9 @@ if [[ "$NODE" == "" ]]; then
       fi
     fi
   else
-    run_command $SHELL_NODE_FOR_ARV_KEEPDOCKER ECODE "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker" |grep -q $VERSION
+    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker" |grep -q $VERSION
 
-    if [[ "$?" == "0" ]]; then
+    if [[ $? -ne 0 ]]; then
       title "Found latest arvados/jobs Docker image, nothing to upload"
       # Just in case it isn't yet, tag the image as latest
       title "Tag arvados/jobs Docker image $VERSION as latest"
