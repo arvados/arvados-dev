@@ -395,6 +395,7 @@ if [[ "$NODE" == "" ]]; then
       title "Found latest arvados/jobs Docker image, nothing to upload"
       # Just in case it isn't yet, tag the image as latest
       title "Tag arvados/jobs Docker image $VERSION as latest"
+      ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $SHELL_NODE_FOR_ARV_KEEPDOCKER docker tag arvados/jobs:$VERSION arvados/jobs:latest
       ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs latest"
       if [[ $? -ne 0 ]]; then
         title "'arv-keepdocker' failed..."
