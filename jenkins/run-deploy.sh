@@ -352,7 +352,7 @@ if [[ "$NODE" == "" ]]; then
 
   title "Found Arvados Standard Docker Images project with uuid $DOCKER_IMAGES_PROJECT"
 
-  VERSION=`ssh -o "StrictHostKeyChecking no" $IDENTIFIER apt-cache policy python-arvados-cwl-runner|grep Candidate`
+  VERSION=`ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $IDENTIFIER apt-cache policy python-arvados-cwl-runner|grep Candidate`
   VERSION=`echo $VERSION|cut -f2 -d' '|cut -f1 -d-`
 
   if [[ "$?" != "0" ]] || [[ "$VERSION" == "" ]]; then
@@ -395,21 +395,21 @@ if [[ "$NODE" == "" ]]; then
       title "Found latest arvados/jobs Docker image, nothing to upload"
       # Just in case it isn't yet, tag the image as latest
       title "Tag arvados/jobs Docker image $VERSION as latest"
-      ssh -o "StrictHostKeyChecking no" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs latest"
+      ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs latest"
       if [[ $? -ne 0 ]]; then
         title "'arv-keepdocker' failed..."
         exit 1
       fi
     else
       title "Installing latest arvados/jobs Docker image"
-      ssh -o "StrictHostKeyChecking no" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $VERSION"
+      ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $VERSION"
       if [[ $? -ne 0 ]]; then
         title "'arv-keepdocker' failed..."
         exit 1
       fi
       ## adding latest tag too  refs 9254
-      ssh -o "StrictHostKeyChecking no" $SHELL_NODE_FOR_ARV_KEEPDOCKER docker tag arvados/jobs:$VERSION arvados/jobs:latest
-      ssh -o "StrictHostKeyChecking no" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs latest"
+      ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $SHELL_NODE_FOR_ARV_KEEPDOCKER docker tag arvados/jobs:$VERSION arvados/jobs:latest
+      ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs latest"
       if [[ $? -ne 0 ]]; then
         title "'arv-keepdocker' failed..."
         exit 1
