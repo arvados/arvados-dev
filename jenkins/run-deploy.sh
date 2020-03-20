@@ -106,7 +106,10 @@ EXITCODE=0
 COLUMNS=80
 
 PUPPET_AGENT='
-__rvm_unload
+if [[ -e "/usr/local/rvm/scripts/rvm" ]]; then
+	source /usr/local/rvm/scripts/rvm
+	__rvm_unload
+fi
 now() { date +%s; }
 let endtime="$(now) + 600"
 while [ "$endtime" -gt "$(now)" ]; do
@@ -157,9 +160,9 @@ function run_apt() {
   sleep $[ $RANDOM / 6000 ].$[ $RANDOM / 1000 ]
   TMP_FILE=`mktemp`
   if [[ "$DEBUG" != "0" ]]; then
-    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 5" root@$node -C bash -c "'$APT_AGENT'" | tee $TMP_FILE
+    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 5" root@$node -C bash -c "'$APT_AGENT'" 2>&1 | sed 's/^/['"${node}"'] /' | tee $TMP_FILE
   else
-    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 5" root@$node -C bash -c "'$APT_AGENT'" > $TMP_FILE 2>&1
+    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 5" root@$node -C bash -c "'$APT_AGENT'" 2>&1 | sed 's/^/['"${node}"'] /' > $TMP_FILE 2>&1
   fi
 
   ECODE=${PIPESTATUS[0]}
@@ -193,9 +196,9 @@ function run_puppet() {
   sleep $[ $RANDOM / 6000 ].$[ $RANDOM / 1000 ]
   TMP_FILE=`mktemp`
   if [[ "$DEBUG" != "0" ]]; then
-    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 5" root@$node -C bash -c "'$PUPPET_AGENT'" | tee $TMP_FILE
+    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 5" root@$node -C bash -c "'$PUPPET_AGENT'" 2>&1 | sed 's/^/['"${node}"'] /' | tee $TMP_FILE
   else
-    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 5" root@$node -C bash -c "'$PUPPET_AGENT'" > $TMP_FILE 2>&1
+    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 5" root@$node -C bash -c "'$PUPPET_AGENT'" 2>&1 | sed 's/^/['"${node}"'] /' > $TMP_FILE 2>&1
   fi
 
   ECODE=${PIPESTATUS[0]}
