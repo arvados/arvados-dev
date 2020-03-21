@@ -321,7 +321,7 @@ if [[ "$NODE" == "" ]]; then
 
   title "Found Arvados Standard Docker Images project with uuid $DOCKER_IMAGES_PROJECT"
 
-  VERSION=`ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $IDENTIFIER apt-cache policy python-arvados-cwl-runner|grep Candidate`
+  VERSION=`ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $IDENTIFIER apt-cache policy python3-arvados-cwl-runner|grep Candidate`
   VERSION=`echo $VERSION|cut -f2 -d' '|cut -f1 -d-`
 
   if [[ "$?" != "0" ]] || [[ "$VERSION" == "" ]]; then
@@ -333,7 +333,7 @@ if [[ "$NODE" == "" ]]; then
 
   if [[ "$SHELL_NODE_FOR_ARV_KEEPDOCKER" == "" ]]; then
     ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker |grep -q $VERSION
-    if [[ "$?" == "0" ]]; then
+    if [[ $? -eq 0 ]]; then
       title "Found latest arvados/jobs Docker image, nothing to upload"
       # Just in case it isn't yet, tag the image as latest
       title "Tag arvados/jobs Docker image $VERSION as latest"
@@ -360,7 +360,7 @@ if [[ "$NODE" == "" ]]; then
   else
     ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker" |grep -q $VERSION
 
-    if [[ $? -ne 0 ]]; then
+    if [[ $? -eq 0 ]]; then
       title "Found latest arvados/jobs Docker image, nothing to upload"
       # Just in case it isn't yet, tag the image as latest
       title "Tag arvados/jobs Docker image $VERSION as latest"
