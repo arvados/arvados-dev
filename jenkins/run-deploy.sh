@@ -332,7 +332,7 @@ if [[ "$NODE" == "" ]]; then
   fi
 
   if [[ "$SHELL_NODE_FOR_ARV_KEEPDOCKER" == "" ]]; then
-    ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker |grep -q $VERSION
+    ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker |grep -qP "arvados/jobs +$VERSION "
     if [[ $? -eq 0 ]]; then
       title "Found latest arvados/jobs Docker image, nothing to upload"
       # Just in case it isn't yet, tag the image as latest
@@ -358,7 +358,7 @@ if [[ "$NODE" == "" ]]; then
       fi
     fi
   else
-    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker" |grep -q $VERSION
+    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker" |grep -qP "arvados/jobs +$VERSION "
 
     if [[ $? -eq 0 ]]; then
       title "Found latest arvados/jobs Docker image, nothing to upload"
