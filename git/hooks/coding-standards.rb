@@ -48,7 +48,8 @@ blacklist ['26d74dc0524c87c5dcc0c76040ce413a4848b57a']
 # Only enforce policy on the master branch
 exit 0 if $refname != 'refs/heads/master'
 
-puts "Enforcing Policies... \n(#{$refname}) (#{$oldrev[0,6]}) (#{$newrev[0,6]})"
+puts "Enforcing Policies..."
+puts "(#{$refname}) (#{$oldrev[0,6]}) (#{$newrev[0,6]})"
 
 $regex = /\[ref: (\d+)\]/
 
@@ -139,8 +140,10 @@ def check_message_format
   end
 
   if broken
+    puts "Enforcing Policies: FAIL"
     exit 1
   end
+  puts "Enforcing Policies: PASS"
 end
 
 check_message_format

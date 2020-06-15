@@ -1,5 +1,9 @@
 #!/usr/bin/env ruby
 
+# Copyright (C) The Arvados Authors. All rights reserved.
+#
+# SPDX-License-Identifier: AGPL-3.0
+
 # This script can be installed as a git update hook.
 
 # It can also be installed as a gitolite 'hooklet' in the
@@ -13,7 +17,8 @@ $oldrev  = ARGV[1]
 $newrev  = ARGV[2]
 $user    = ENV['USER']
 
-puts "Enforcing DCO signoff: (#{$refname}) (#{$oldrev[0,6]}) (#{$newrev[0,6]})"
+puts "Enforcing DCO signoff..."
+puts "(#{$refname}) (#{$oldrev[0,6]}) (#{$newrev[0,6]})"
 
 $regex = /\[ref: (\d+)\]/
 
@@ -57,8 +62,10 @@ def check_message_format
   end
 
   if broken
+    puts "Enforcing DCO signoff: FAIL"
     exit 1
   end
+  puts "Enforcing DCO signoff: PASS"
 end
 
 check_message_format
