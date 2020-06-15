@@ -21,7 +21,7 @@ puts "Enforcing copyright headers..."
 puts "(#{$refname}) (#{$oldrev[0,6]}) (#{$newrev[0,6]})"
 
 def load_licenseignore
-  $licenseignore = `git show #{$newrev}:.licenseignore`.gsub(/\./,'\\.').gsub(/\*/,'.*').gsub(/\?/,'.').split("\n")
+  $licenseignore = `git show #{$newrev}:.licenseignore 2>/dev/null`.gsub(/\./,'\\.').gsub(/\*/,'.*').gsub(/\?/,'.').split("\n")
 end
 
 def check_file(filename, header, broken)
