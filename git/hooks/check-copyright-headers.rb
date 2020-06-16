@@ -83,8 +83,27 @@ def check_copyright_headers
         filename = f
         commit = `git show #{tmp[0]} -- #{f}`
         if commit =~ /^new file mode \d{6}\nindex 000000/
-          /^.*?@@\n(.*)$/m.match(commit)
-          header = `echo "#{$1}" | head -n20 | egrep -A3 -B1 'Copyright.*All rights reserved.'`
+          headerCount = 0
+          lineCount = 0
+          header = ""
+          previousLine = ""
+          commit.each_line do |line|
+            if ((headerCount == 0) and (line =~ /Copyright.*All rights reserved./))
+              header = previousLine
+              header += line
+              headerCount = 1
+            elsif ((headerCount > 0) and (headerCount < 3))
+              header += line
+              headerCount += 1
+            elsif (headerCount == 3)
+              break
+            end
+            previousLine = line
+            lineCount += 1
+            if lineCount > 50
+              break
+            end
+          end
           broken = check_file(filename, header, broken)
         end
       end
