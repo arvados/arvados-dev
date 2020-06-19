@@ -47,28 +47,31 @@ end
 def check_copyright_headers
   if ($newrev[0,6] ==  '000000')
     # A branch is being deleted. Do not check old commits for DCO signoff!
-    all_revs    = []
+    all_objects = []
+    commits = []
   elsif ($oldrev[0,6] ==  '000000')
     if $refname != 'refs/heads/master'
       # A new branch was pushed. Check all new commits in this branch.
       puts "git rev-list --objects master..#{$newrev} | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^blob //p'"
-      blob_revs  = `git rev-list --objects master..#{$newrev} | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^blob //p'`.split("\n")
-      commit_revs  = `git rev-list --objects master..#{$newrev} | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^commit //p'`.split("\n")
-      all_revs = blob_revs + commit_revs
+      blob_objects  = `git rev-list --objects master..#{$newrev} | git cat-file --follow-symlinks --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^blob //p'`.split("\n")
+      commit_objects  = `git rev-list --objects master..#{$newrev} | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^commit //p'`.split("\n")
+      all_objects = blob_objects + commit_objects
+      commits = `git rev-list master..#{$newrev}`.split("\n")
     else
       # When does this happen?
       puts "UNEXPECTED ERROR"
       exit 1
     end
   else
-    blob_revs = `git rev-list --objects #{$oldrev}..#{$newrev} --not --branches='*' | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^blob //p'`.split("\n")
-    commit_revs  = `git rev-list --objects #{$oldrev}..#{$newrev} | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^commit //p'`.split("\n")
-    all_revs = blob_revs + commit_revs
+    blob_objects = `git rev-list --objects #{$oldrev}..#{$newrev} --not --branches='*' | git cat-file --follow-symlinks --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^blob //p'`.split("\n")
+    commit_objects  = `git rev-list --objects #{$oldrev}..#{$newrev} | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^commit //p'`.split("\n")
+    all_objects = blob_objects + commit_objects
+    commits = `git rev-list #{$oldrev}..#{$newrev}`.split("\n")
   end
 
   broken = false
 
-  all_revs.each do |rev|
+  all_objects.each do |rev|
     ignore = false
     tmp = rev.split(' ')
     if tmp[2].nil?
@@ -82,7 +85,8 @@ def check_copyright_headers
       files.each do |f|
         filename = f
         commit = `git show #{tmp[0]} -- #{f}`
-        if commit =~ /^new file mode \d{6}\nindex 000000/
+        # Only consider files, not symlinks (mode 120000)
+        if commit =~ /^new file mode (100644|10755)\nindex 000000/
           headerCount = 0
           lineCount = 0
           header = ""
@@ -110,8 +114,25 @@ def check_copyright_headers
     else
       # git object of type 'blob'
       filename = tmp[2]
-      header = `git show #{tmp[0]} | head -n20 | egrep -A3 -B1 'Copyright.*All rights reserved.'`
-      broken = check_file(filename, header, broken)
+      # test if this is a symlink.
+      # Get the tree for each revision we are considering, find the blob hash in there, check the mode at start of line.
+      # Stop looking at revisions once we have a match.
+      symlink = false
+      commits.each do |r|
+        tree = `git cat-file -p #{r}^{tree}`
+        if tree =~ /#{tmp[0]}/
+           if tree =~ /^120000.blob.#{tmp[0]}/
+            symlink = true
+          end
+          break
+        end
+      end
+      if symlink == false
+        header = `git show #{tmp[0]} | head -n20 | egrep -A3 -B1 'Copyright.*All rights reserved.'`
+        broken = check_file(filename, header, broken)
+      else
+        #puts "#{filename} is a symbolic link, skipping"
+      end
     end
   end
 
