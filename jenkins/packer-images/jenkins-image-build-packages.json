@@ -1,0 +1,33 @@
+{
+  "variables": {
+        "key_file": "{{env `packerbuildkey`}}"
+    },
+  "builders": [
+    {
+      "type": "googlecompute",
+      "account_file": "{{user `key_file` }}",
+      "project_id": "phoenix-project-42-ci",
+      "source_image": "debian-10-buster-v20200413",
+      "zone": "us-central1-b",
+      "disk_size": "20",
+      "image_name": "build-packages-jenkins-image-{{isotime \"20060102150405\"}}",
+      "image_family": "jenkins",
+      "ssh_username": "jenkins"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "node-ready.sh",
+      "destination": "/tmp/node-ready.sh"
+    },
+    {
+      "type": "shell",
+      "script": "./jenkins-image-common.sh"
+    },
+    {
+      "type": "shell",
+      "script": "./jenkins-image-build-packages.sh"
+    }
+  ]
+}
