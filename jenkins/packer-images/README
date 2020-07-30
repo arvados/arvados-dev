@@ -1,0 +1,22 @@
+# Copyright (C) The Arvados Authors. All rights reserved.
+#
+# SPDX-License-Identifier: CC-BY-SA-3.0
+
+The files under this directory are used to create images used in our Jenkins CI.
+
+*** IMAGE FOR RUNNING TESTS ***
+
+packer build jenkins-image-tests.json
+
+*** IMAGE FOR RUNNING FEDERATION TESTS ***
+
+packer build jenkins-image-federation-tests.json
+
+*** IMAGE FOR BUILDING PACKAGES ***
+
+packer build jenkins-image-build-packages.json
+
+*** IMAGE FOR K8S TESTS ***
+
+packer build jenkins-image-k8s-tests.json
+
