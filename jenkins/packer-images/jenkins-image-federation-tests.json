@@ -10,7 +10,7 @@
       "source_image": "debian-10-buster-v20200714",
       "zone": "us-central1-a",
       "disk_size": "10",
-      "image_name": "federation-jenkins-{{timestamp}}",
+      "image_name": "jenkins-image-federation-tests-{{isotime \"20060102150405\"}}",
       "image_family": "jenkins",
       "ssh_username": "jenkins"
     }
