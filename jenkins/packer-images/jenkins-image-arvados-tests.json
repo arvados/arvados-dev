@@ -9,8 +9,8 @@
       "project_id": "phoenix-project-42-ci",
       "source_image": "debian-10-buster-v20200413",
       "zone": "us-central1-b",
-      "disk_size": "20",
-      "image_name": "build-packages-jenkins-image-{{isotime \"20060102150405\"}}",
+      "disk_size": "10",
+      "image_name": "jenkins-image-arvados-tests-{{isotime \"20060102150405\"}}",
       "image_family": "jenkins",
       "ssh_username": "jenkins"
     }
@@ -27,7 +27,7 @@
     },
     {
       "type": "shell",
-      "script": "./jenkins-image-build-packages.sh"
+      "script": "./jenkins-image-arvados-tests.sh"
     }
   ]
 }
