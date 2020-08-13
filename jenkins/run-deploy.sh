@@ -321,17 +321,17 @@ if [[ "$NODE" == "" ]]; then
 
   title "Found Arvados Standard Docker Images project with uuid $DOCKER_IMAGES_PROJECT"
 
-  VERSION=`ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $IDENTIFIER apt-cache policy python3-arvados-cwl-runner|grep Candidate`
-  VERSION=`echo $VERSION|cut -f2 -d' '|cut -f1 -d-`
-
-  if [[ "$?" != "0" ]] || [[ "$VERSION" == "" ]]; then
-    title "ERROR: unable to get arvados/jobs Docker image version"
-    exit 1
-  else
-    title "Found version for arvados/jobs Docker image: $VERSION"
-  fi
-
   if [[ "$SHELL_NODE_FOR_ARV_KEEPDOCKER" == "" ]]; then
+    VERSION=`ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $IDENTIFIER apt-cache policy python3-arvados-cwl-runner|grep Candidate`
+    VERSION=`echo $VERSION|cut -f2 -d' '|cut -f1 -d-`
+
+    if [[ "$?" != "0" ]] || [[ "$VERSION" == "" ]]; then
+      title "ERROR: unable to get arvados/jobs Docker image version"
+      exit 1
+    else
+      title "Found version for arvados/jobs Docker image: $VERSION"
+    fi
+
     ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker |grep -qP "arvados/jobs +$VERSION "
     if [[ $? -eq 0 ]]; then
       title "Found latest arvados/jobs Docker image, nothing to upload"
@@ -358,6 +358,16 @@ if [[ "$NODE" == "" ]]; then
       fi
     fi
   else
+    VERSION=`ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $SHELL_NODE_FOR_ARV_KEEPDOCKER apt-cache policy python3-arvados-cwl-runner|grep Candidate`
+    VERSION=`echo $VERSION|cut -f2 -d' '|cut -f1 -d-`
+
+    if [[ "$?" != "0" ]] || [[ "$VERSION" == "" ]]; then
+      title "ERROR: unable to get arvados/jobs Docker image version"
+      exit 1
+    else
+      title "Found version for arvados/jobs Docker image: $VERSION"
+    fi
+
     ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker" |grep -qP "arvados/jobs +$VERSION "
 
     if [[ $? -eq 0 ]]; then
