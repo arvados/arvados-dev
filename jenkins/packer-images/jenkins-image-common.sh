@@ -15,6 +15,9 @@ echo "deb http://deb.debian.org/debian buster-backports main" | sudo tee /etc/ap
 # Install a few dependency packages
 sudo su -c "apt-get update"
 sudo su -c "DEBIAN_FRONTEND=noninteractive apt install -y git netcat default-jdk"
+# Remove unattended-upgrades so that it doesn't interfere with our nodes at startup
+sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get remove -y unattended-upgrades"
+sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get autoremove -y"
 
 # create a reference repository (bare git repo)
 # jenkins will use this to speed up the checkout for each job
