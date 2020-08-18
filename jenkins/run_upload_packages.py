@@ -240,10 +240,8 @@ def _define_suite(suite_class, *rel_globs, **kwargs):
 
 PACKAGE_SUITES = {
     'python': _define_suite(PythonPackageSuite,
-                            'sdk/pam/dist/*.tar.gz',
                             'sdk/python/dist/*.tar.gz',
                             'sdk/cwl/dist/*.tar.gz',
-                            'services/nodemanager/dist/*.tar.gz',
                             'services/fuse/dist/*.tar.gz',
                         ),
     'gems': _define_suite(GemPackageSuite,
