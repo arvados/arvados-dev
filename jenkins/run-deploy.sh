@@ -4,6 +4,8 @@
 #
 # SPDX-License-Identifier: AGPL-3.0
 
+set -e
+
 DEBUG=0
 UNMANAGED=0
 SSH_PORT=22
