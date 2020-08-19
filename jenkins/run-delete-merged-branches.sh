@@ -20,7 +20,7 @@ trap '_exit_handler $LINENO' EXIT ERR
 # List here branches that you don't want to ever delete, separated with "|"
 # (as they will be passed as a parameter to egrep)
 # IE: "keep_this_branch|also_this_other|and_this_one"
-branches_to_keep="master|integration|dev|staging"
+branches_to_keep="master|main|integration|dev|staging|.*\-dev"
 
 git remote update --prune
 git checkout master
