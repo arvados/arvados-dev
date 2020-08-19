@@ -24,6 +24,7 @@ branches_to_keep="master|main|integration|dev|staging|.*\-dev"
 
 git remote update --prune
 git checkout master
+git pull
 
 git branch --remote --merged | \
     egrep -v "/(${branches_to_keep})\$" | \
