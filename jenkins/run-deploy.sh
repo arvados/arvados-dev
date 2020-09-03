@@ -328,16 +328,20 @@ if [[ "$NODE" == "" ]]; then
     VERSION=`echo $VERSION|cut -f2 -d' '|cut -f1 -d-`
 
     if [[ "$?" != "0" ]] || [[ "$VERSION" == "" ]]; then
-      title "ERROR: unable to get arvados/jobs Docker image version"
+      title "ERROR: unable to get python3-arvados-cwl-runner version"
       exit 1
     else
-      title "Found version for arvados/jobs Docker image: $VERSION"
+      title "Found version for python3-arvados-cwl-runner: $VERSION"
     fi
 
+    set +e
     ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker |grep -qP "arvados/jobs +$VERSION "
     if [[ $? -eq 0 ]]; then
+      set -e
       title "Found arvados/jobs Docker image version $VERSION, nothing to upload"
     else
+      set -e
+      title "Found arvados/jobs Docker image version $VERSION, nothing to upload"
       title "Installing arvados/jobs Docker image version $VERSION"
       ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $VERSION
       if [[ $? -ne 0 ]]; then
@@ -350,17 +354,19 @@ if [[ "$NODE" == "" ]]; then
     VERSION=`echo $VERSION|cut -f2 -d' '|cut -f1 -d-`
 
     if [[ "$?" != "0" ]] || [[ "$VERSION" == "" ]]; then
-      title "ERROR: unable to get arvados/jobs Docker image version"
+      title "ERROR: unable to get python3-arvados-cwl-runner version"
       exit 1
     else
-      title "Found version for arvados/jobs Docker image: $VERSION"
+      title "Found version for python3-arvados-cwl-runner: $VERSION"
     fi
 
+    set +e
     ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker" |grep -qP "arvados/jobs +$VERSION "
-
     if [[ $? -eq 0 ]]; then
+      set -e
       title "Found arvados/jobs Docker image version $VERSION, nothing to upload"
     else
+      set -e
       title "Installing arvados/jobs Docker image version $VERSION"
       ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $VERSION"
       if [[ $? -ne 0 ]]; then
