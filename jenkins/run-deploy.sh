@@ -185,9 +185,9 @@ function run_apt() {
 
   if [[ "$ECODE" == "0" ]]; then
       rm -f $TMP_FILE
-      echo $node successfully updated
+      title "$node successfully updated"
   else
-      echo $node exit code: $ECODE see $TMP_FILE for details
+      title "$node exit code: $ECODE see $TMP_FILE for details"
   fi
 }
 
@@ -264,13 +264,13 @@ fi
 
 title "Gathering list of nodes"
 start_nodes="workbench"
-if [[ "$IDENTIFIER" != "ce8i5" ]]; then
+if [[ "$IDENTIFIER" != "ce8i5" ]] && [[ "$IDENTIFIER" != "tordo" ]]; then
   start_nodes="$start_nodes manage switchyard"
 fi
 SHELL_NODES=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv virtual_machine list |jq .items[].hostname -r`
 KEEP_NODES=`ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv keep_service list |jq .items[].service_host -r`
 SHELL_NODE_FOR_ARV_KEEPDOCKER="shell.$IDENTIFIER"
-start_nodes="$start_nodes $SHELL_NODES $KEEP_NODES $ARVADOS_API_HOST"
+start_nodes="$start_nodes $SHELL_NODES $KEEP_NODES"
 
 nodes=""
 for n in $start_nodes; do
@@ -292,7 +292,7 @@ if [[ "$nodes" != "" ]]; then
   ## at this point nodes should be an array containing
   ## manage.qr1hi,  keep.qr1hi, etc
   ## that should be defined in the .ssh/config file
-  title "Updating in parallel: $nodes"
+  title "Updating in parallel:$nodes"
   export -f update_node
   export -f run_puppet
   export -f run_apt
@@ -324,7 +324,7 @@ if [[ "$NODE" == "" ]]; then
   title "Found Arvados Standard Docker Images project with uuid $DOCKER_IMAGES_PROJECT"
 
   if [[ "$SHELL_NODE_FOR_ARV_KEEPDOCKER" == "" ]]; then
-    VERSION=`ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $IDENTIFIER apt-cache policy python3-arvados-cwl-runner|grep Candidate`
+    VERSION=`ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" -o "LogLevel QUIET" $IDENTIFIER apt-cache policy python3-arvados-cwl-runner|grep Candidate`
     VERSION=`echo $VERSION|cut -f2 -d' '|cut -f1 -d-`
 
     if [[ "$?" != "0" ]] || [[ "$VERSION" == "" ]]; then
@@ -350,7 +350,7 @@ if [[ "$NODE" == "" ]]; then
       fi
     fi
   else
-    VERSION=`ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $SHELL_NODE_FOR_ARV_KEEPDOCKER apt-cache policy python3-arvados-cwl-runner|grep Candidate`
+    VERSION=`ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" -o "LogLevel QUIET" $SHELL_NODE_FOR_ARV_KEEPDOCKER apt-cache policy python3-arvados-cwl-runner|grep Candidate`
     VERSION=`echo $VERSION|cut -f2 -d' '|cut -f1 -d-`
 
     if [[ "$?" != "0" ]] || [[ "$VERSION" == "" ]]; then
@@ -361,14 +361,14 @@ if [[ "$NODE" == "" ]]; then
     fi
 
     set +e
-    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker" |grep -qP "arvados/jobs +$VERSION "
+    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" -o "LogLevel QUIET" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker" |grep -qP "arvados/jobs +$VERSION "
     if [[ $? -eq 0 ]]; then
       set -e
       title "Found arvados/jobs Docker image version $VERSION, nothing to upload"
     else
       set -e
       title "Installing arvados/jobs Docker image version $VERSION"
-      ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $VERSION"
+      ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" -o "LogLevel QUIET" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $VERSION"
       if [[ $? -ne 0 ]]; then
         title "'arv-keepdocker' failed..."
         exit 1
