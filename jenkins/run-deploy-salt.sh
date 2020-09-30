@@ -7,9 +7,6 @@
 set -e
 
 DEBUG=0
-UNMANAGED=0
-SSH_PORT=22
-PUPPET_CONCURRENCY=5
 
 read -d] -r SCOPES <<EOF
 --scopes
