@@ -148,14 +148,15 @@ else
 fi
 
 set +e
-run_salt "shell.$IDENTIFIER" "'{\"ARVADOS_API_HOST\": \"$ARVADOS_API_HOST\", \"ARVADOS_API_TOKEN\": \"$ARVADOS_API_TOKEN\"}'" "arv-keepdocker" |grep -qP "arvados/jobs +$VERSION "
+    CLEAN_VERSION=`echo $VERSION |tr -d '~'`
+run_salt "shell.$IDENTIFIER" "'{\"ARVADOS_API_HOST\": \"$ARVADOS_API_HOST\", \"ARVADOS_API_TOKEN\": \"$ARVADOS_API_TOKEN\"}'" "arv-keepdocker" |grep -qP "arvados/jobs +$CLEAN_VERSION "
 if [[ $? -eq 0 ]]; then
   set -e
-  title "Found arvados/jobs Docker image version $VERSION, nothing to upload"
+  title "Found arvados/jobs Docker image version $CLEAN_VERSION, nothing to upload"
 else
   set -e
-  title "Installing arvados/jobs Docker image version $VERSION"
-  run_salt "shell.$IDENTIFIER" "'{\"ARVADOS_API_HOST\": \"$ARVADOS_API_HOST\", \"ARVADOS_API_TOKEN\": \"$ARVADOS_API_TOKEN\"}'" "arv-keepdocker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $VERSION"
+  title "Installing arvados/jobs Docker image version $CLEAN_VERSION"
+  run_salt "shell.$IDENTIFIER" "'{\"ARVADOS_API_HOST\": \"$ARVADOS_API_HOST\", \"ARVADOS_API_TOKEN\": \"$ARVADOS_API_TOKEN\"}'" "arv-keepdocker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $CLEAN_VERSION"
   if [[ $? -ne 0 ]]; then
     title "'arv-keepdocker' failed..."
     exit 1

@@ -335,15 +335,15 @@ if [[ "$NODE" == "" ]]; then
     fi
 
     set +e
-    ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker |grep -qP "arvados/jobs +$VERSION "
+    CLEAN_VERSION=`echo $VERSION |tr -d '~'`
+    ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker |grep -qP "arvados/jobs +$CLEAN_VERSION "
     if [[ $? -eq 0 ]]; then
       set -e
-      title "Found arvados/jobs Docker image version $VERSION, nothing to upload"
+      title "Found arvados/jobs Docker image version $CLEAN_VERSION, nothing to upload"
     else
       set -e
-      title "Found arvados/jobs Docker image version $VERSION, nothing to upload"
-      title "Installing arvados/jobs Docker image version $VERSION"
-      ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $VERSION
+      title "Installing arvados/jobs Docker image version $CLEAN_VERSION"
+      ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $CLEAN_VERSION
       if [[ $? -ne 0 ]]; then
         title "'arv-keepdocker' failed..."
         exit 1
@@ -361,14 +361,15 @@ if [[ "$NODE" == "" ]]; then
     fi
 
     set +e
-    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" -o "LogLevel QUIET" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker" |grep -qP "arvados/jobs +$VERSION "
+    CLEAN_VERSION=`echo $VERSION |tr -d '~'`
+    ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" -o "LogLevel QUIET" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker" |grep -qP "arvados/jobs +$CLEAN_VERSION "
     if [[ $? -eq 0 ]]; then
       set -e
-      title "Found arvados/jobs Docker image version $VERSION, nothing to upload"
+      title "Found arvados/jobs Docker image version $CLEAN_VERSION, nothing to upload"
     else
       set -e
-      title "Installing arvados/jobs Docker image version $VERSION"
-      ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" -o "LogLevel QUIET" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $VERSION"
+      title "Installing arvados/jobs Docker image version $CLEAN_VERSION"
+      ssh -t -p$SSH_PORT -o "StrictHostKeyChecking no" -o "ConnectTimeout 125" -o "LogLevel QUIET" $SHELL_NODE_FOR_ARV_KEEPDOCKER "ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker --pull --project-uuid=$DOCKER_IMAGES_PROJECT arvados/jobs $CLEAN_VERSION"
       if [[ $? -ne 0 ]]; then
         title "'arv-keepdocker' failed..."
         exit 1
