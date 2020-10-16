@@ -335,7 +335,7 @@ if [[ "$NODE" == "" ]]; then
     fi
 
     set +e
-    CLEAN_VERSION=`echo $VERSION |tr -d '~'`
+    CLEAN_VERSION=`echo $VERSION |sed -e 's/~/./'`
     ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN arv-keepdocker |grep -qP "arvados/jobs +$CLEAN_VERSION "
     if [[ $? -eq 0 ]]; then
       set -e
