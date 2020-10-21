@@ -140,7 +140,7 @@ def check_copyright_headers
     puts
     puts "[POLICY] all files must contain copyright headers, for more information see"
     puts
-    puts "          https://arvados.org/projects/arvados/wiki/Coding_Standards#Copyright-headers"
+    puts "      https://dev.arvados.org/projects/arvados/wiki/Coding_Standards#Copyright-headers"
     puts
     puts "Enforcing copyright headers: FAIL"
     exit 1
