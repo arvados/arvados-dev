@@ -204,6 +204,7 @@ rm "$@"
             'ubuntu1404': 'trusty-'+repo,
             'ubuntu1604': 'xenial-'+repo,
             'ubuntu1804': 'bionic-'+repo,
+            'ubuntu2004': 'focal-'+repo,
             }
 
     def post_uploads(self, paths):
@@ -279,7 +280,7 @@ def parse_arguments(arguments):
     if args.workspace is None:
         parser.error("workspace not set from command line or environment")
 
-    for target in ['debian8', 'debian9', 'debian10', 'ubuntu1404', 'ubuntu1604', 'ubuntu1804']:
+    for target in ['debian8', 'debian9', 'debian10', 'ubuntu1404', 'ubuntu1604', 'ubuntu1804', 'ubuntu2004']:
         PACKAGE_SUITES[target] = _define_suite(
             DebianPackageSuite, os.path.join('packages', target, '*.deb'),
             target=target, repo=args.repo)
