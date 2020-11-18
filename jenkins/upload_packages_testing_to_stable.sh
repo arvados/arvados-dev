@@ -7,8 +7,6 @@
 # Parameters: list of packages, space separated, to move from *-testing to *
 # under /var/lib/freight/apt/ in host public.curoverse.com
 
-set -x
-
 APT_REPO_SERVER="apt.arvados.org"
 RPM_REPO_SERVER="rpm.arvados.org"
 
@@ -27,6 +25,18 @@ if [ -z "${LSB_DISTRIB_CODENAMES}" ]; then
   echo "* Debian: jessie, xenial, stretch, etc."
   echo "* Centos: centos7 (the only one currently supported.)"
   exit 255
+fi
+
+# Only numbered package versions are supposed to go into the stable repositories
+TMP=$(echo "$PACKAGES_TO_PUBLISH" | sed 's/versions://g;')
+VALIDATED_PACKAGES_TO_PUBLISH=`echo "$TMP" | sed -nE '/^.*: [0-9].[0-9].[0-9]-[0-9]$/p'`
+
+if [[ "$TMP" != "$VALIDATED_PACKAGES_TO_PUBLISH" ]]; then
+  echo "The list of packages has invalid syntax. each line must be of the format:"
+  echo
+  echo "packagename: [0-9].[0-9].[0-9]-[0-9]"
+  echo
+  exit 253
 fi
 
 # Sanitize the vars in a way suitable to be used by the remote 'publish_packages.sh' script
