@@ -124,7 +124,9 @@ class PythonPackageSuite(PackageSuite):
         cmd = ['python3', 'setup.py']
         if not self.logger.isEnabledFor(logging.INFO):
             cmd.append('--quiet')
-        cmd.extend(['sdist', '--dist-dir', '.upload_dist', 'upload'])
+        cmd.extend(['bdist_wheel', '--dist-dir', '.upload_dist'])
+        cmd.extend(['sdist', '--dist-dir', '.upload_dist'])
+        cmd.extend(['upload'])
         upload_returncode, repushed = run_and_grep(
             cmd, 'stderr', *self.REUPLOAD_REGEXPS, cwd=src_dir)
         if (upload_returncode != 0) and not repushed:
