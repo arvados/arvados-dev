@@ -116,16 +116,12 @@ class PythonPackageSuite(PackageSuite):
         if src_dir in self.seen_packages:
             return
         self.seen_packages.add(src_dir)
-        # NOTE: If we ever start uploading Python 3 packages, we'll need to
-        # figure out some way to adapt cmd to match.  It might be easiest
-        # to give all our setup.py files the executable bit, and run that
-        # directly.
         # We also must run `sdist` before `upload`: `upload` uploads any
         # distributions previously generated in the command.  It doesn't
         # know how to upload distributions already on disk.  We write the
         # result to a dedicated directory to avoid interfering with our
         # timestamp tracking.
-        cmd = ['python2.7', 'setup.py']
+        cmd = ['python3', 'setup.py']
         if not self.logger.isEnabledFor(logging.INFO):
             cmd.append('--quiet')
         cmd.extend(['sdist', '--dist-dir', '.upload_dist', 'upload'])
