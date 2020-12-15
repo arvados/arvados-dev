@@ -131,7 +131,7 @@ now() { date +%s; }
 let endtime="$(now) + 600"
 while [ "$endtime" -gt "$(now)" ]; do
   apt-get update
-  apt-get -y upgrade
+  DEBIAN_FRONTEND=noninteractive apt-get -y upgrade
   apt_exitcode=$?
   if [ 0 = "$apt_exitcode" ]; then
     break
