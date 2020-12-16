@@ -35,7 +35,7 @@ function usage {
     echo >&2
     echo >&2 "usage: $0 [options] <identifier>"
     echo >&2
-    echo >&2 "   <identifier>                 Arvados cluster name"
+    echo >&2 "   <identifier>                 Arvados cluster name or single node salt identifier"
     echo >&2
     echo >&2 "$0 options:"
     echo >&2 "  -d, --debug                   Enable debug output"
@@ -109,6 +109,11 @@ if [[ -z "$SALT_MASTER" ]]; then
 fi
 
 run_salt "*$IDENTIFIER" '' 'apt update && DEBIAN_FRONTEND=noninteractive apt -y upgrade'
+
+if [[ "$IDENTIFIER" =~ \. ]]; then
+  title "Single node deploy requested, done"
+  exit 0
+fi
 
 title "Loading ARVADOS_API_HOST and ARVADOS_API_TOKEN"
 if [[ -f "$HOME/.config/arvados/$IDENTIFIER.arvadosapi.com.conf" ]]; then
