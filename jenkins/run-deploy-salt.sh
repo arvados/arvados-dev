@@ -100,7 +100,7 @@ function run_salt() {
   fi
   shift
   shift
-  ssh -o "ConnectTimeout 5" -o "LogLevel QUIET" $SALT_MASTER sudo salt --out=txt \'*$cluster*\' cmd.run \'$(IFS=\0;echo "$@")\' $E
+  ssh -o "ConnectTimeout 5" -o "LogLevel QUIET" $SALT_MASTER salt --out=txt \'*$cluster*\' cmd.run \'$(IFS=\0;echo "$@")\' $E
 }
 
 if [[ -z "$SALT_MASTER" ]]; then
