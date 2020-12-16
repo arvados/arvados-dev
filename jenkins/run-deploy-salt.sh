@@ -100,7 +100,7 @@ function run_salt() {
   fi
   shift
   shift
-  ssh -o "ConnectTimeout 5" -o "LogLevel QUIET" $SALT_MASTER salt --out=txt \'*$cluster*\' cmd.run \'$(IFS=\0;echo "$@")\' $E
+  ssh -o "ConnectTimeout 5" -o "LogLevel QUIET" $SALT_MASTER salt --out=txt \'$cluster*\' cmd.run \'$(IFS=\0;echo "$@")\' $E
 }
 
 if [[ -z "$SALT_MASTER" ]]; then
@@ -108,7 +108,7 @@ if [[ -z "$SALT_MASTER" ]]; then
   exit 1
 fi
 
-run_salt $IDENTIFIER '' 'apt update && DEBIAN_FRONTEND=noninteractive apt -y upgrade'
+run_salt "*$IDENTIFIER" '' 'apt update && DEBIAN_FRONTEND=noninteractive apt -y upgrade'
 
 title "Loading ARVADOS_API_HOST and ARVADOS_API_TOKEN"
 if [[ -f "$HOME/.config/arvados/$IDENTIFIER.arvadosapi.com.conf" ]]; then
@@ -138,7 +138,7 @@ if [[ "$DOCKER_IMAGES_PROJECT" == "" ]]; then
 fi
 
 title "Found Arvados Standard Docker Images project with uuid $DOCKER_IMAGES_PROJECT"
-VERSION=$(run_salt shell.$IDENTIFIER '' 'apt-cache policy python3-arvados-cwl-runner' | grep Candidate |awk '{print $3}' |cut -f1 -d-)
+VERSION=$(run_salt "shell.$IDENTIFIER" '' 'apt-cache policy python3-arvados-cwl-runner' | grep Candidate |awk '{print $3}' |cut -f1 -d-)
 
 if [[ "$?" != "0" ]] || [[ "$VERSION" == "" ]]; then
   title "ERROR: unable to get python3-arvados-cwl-runner version"
