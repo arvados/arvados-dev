@@ -108,7 +108,7 @@ if [[ -z "$SALT_MASTER" ]]; then
   exit 1
 fi
 
-run_salt $IDENTIFIER '' 'apt update && apt -y upgrade'
+run_salt $IDENTIFIER '' 'apt update && DEBIAN_FRONTEND=noninteractive apt -y upgrade'
 
 title "Loading ARVADOS_API_HOST and ARVADOS_API_TOKEN"
 if [[ -f "$HOME/.config/arvados/$IDENTIFIER.arvadosapi.com.conf" ]]; then
