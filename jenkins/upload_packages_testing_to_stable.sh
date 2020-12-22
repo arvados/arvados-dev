@@ -3,9 +3,9 @@
 #
 # SPDX-License-Identifier: AGPL-3.0
 
-# This script publishes packages from our dev repo to the prod repo (#11572)
-# Parameters: list of packages, space separated, to move from *-testing to *
-# under /var/lib/freight/apt/ in host public.curoverse.com
+# This script publishes packages from our testing repo to the prod repo
+# (#11572)
+# Parameters: list of packages, space separated, to copy from *-testing to *
 
 APT_REPO_SERVER="apt.arvados.org"
 RPM_REPO_SERVER="rpm.arvados.org"

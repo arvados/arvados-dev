@@ -8,7 +8,6 @@
 #   --packages list of packages, comma separated, to move from dev_repo_dir to prod_repo_dir
 #   --distros  list of distros, comma separated, to which to publish packages
 
-APT_REPO_BASE_DIR="/var/lib/freight"
 RPM_REPO_BASE_DIR="/var/www/rpm.arvados.org"
 
 ###  MAIN  ####################################################################
@@ -73,23 +72,12 @@ if ( echo ${DIST_LIST} |grep -q centos ); then
 else
   for DISTNAME in ${DIST_LIST}; do
     ADDED=()
-    cd ${APT_REPO_BASE_DIR}
-    mkdir -p ${APT_REPO_BASE_DIR}/apt/${DISTNAME}
     echo "Copying packages ..."
     for P in ${PACKAGES}; do
-      cp ${APT_REPO_BASE_DIR}/apt/${DISTNAME}-testing/${P} ${APT_REPO_BASE_DIR}/apt/${DISTNAME}/
-      if [ $? -ne 0 ]; then
-        FAILED_PACKAGES="${FAILED_PACKAGES} ${P}"
-      else
-        TMP=`ls -C1 ${APT_REPO_BASE_DIR}/apt/${DISTNAME}-testing/${P}`
-        ADDED+=( "${TMP[@]}" )
-      fi
+      aptly repo copy ${DISTNAME}-testing ${DISTNAME} $(basename ${P})
     done
-    for P in "${ADDED[@]}"; do
-      freight add apt/${DISTNAME}/$(basename ${P}) apt/${DISTNAME}
-    done
-    echo "Recreating repo apt/${DISTNAME} ..."
-    freight cache apt/${DISTNAME}
+    echo "Publishing ${DISTNAME} repository..."
+    aptly publish update ${DISTNAME} filesystem:${DISTNAME}:
   done
 fi
 
