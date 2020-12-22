@@ -6,7 +6,7 @@
 
 set -eo pipefail
 
-echo "deb http://apt.arvados.org/ buster main" | sudo  tee /etc/apt/sources.list.d/arvados.list
+echo "deb http://apt.arvados.org/buster buster main" | sudo  tee /etc/apt/sources.list.d/arvados.list
 
 # Install a few dependencies
 sudo DEBIAN_FRONTEND=noninteractive apt-get -y --no-install-recommends install gnupg2 wget git default-jdk docker.io netcat

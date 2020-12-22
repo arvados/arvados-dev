@@ -188,8 +188,8 @@ class DebianPackageSuite(DistroPackageSuite):
     FREIGHT_SCRIPT = """
 cd "$1"; shift
 DISTNAME=$1; shift
-freight add "$@" "apt/$DISTNAME"
-freight cache "apt/$DISTNAME"
+aptly repo add "$DISTNAME" "$@"
+aptly publish update "$DISTNAME" filesystem:"${DISTNAME%-*}":
 rm "$@"
 """
 
