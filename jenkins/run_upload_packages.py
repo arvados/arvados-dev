@@ -185,7 +185,8 @@ class DistroPackageSuite(PackageSuite):
 
 
 class DebianPackageSuite(DistroPackageSuite):
-    FREIGHT_SCRIPT = """
+    APT_SCRIPT = """
+set -x
 cd "$1"; shift
 DISTNAME=$1; shift
 set +e
@@ -214,7 +215,7 @@ fi
             }
 
     def post_uploads(self, paths):
-        self._run_script(self.FREIGHT_SCRIPT, self.REMOTE_DEST_DIR + '/' + self.target,
+        self._run_script(self.APT_SCRIPT, self.REMOTE_DEST_DIR + '/' + self.target,
                          self.TARGET_DISTNAMES[self.target],
                          *self._paths_basenames(paths))
 
