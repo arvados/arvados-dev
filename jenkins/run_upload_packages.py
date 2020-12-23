@@ -186,20 +186,21 @@ class DistroPackageSuite(PackageSuite):
 
 class DebianPackageSuite(DistroPackageSuite):
     APT_SCRIPT = """
-set -x
 cd "$1"; shift
 DISTNAME=$1; shift
-set +e
-aptly repo search "$DISTNAME" "${@%.deb}" >/dev/null 2>&1
-RET=$?
-set -e
-if [[ $RET -eq 0 ]]; then
-  echo "Not adding $@, it is already present in repo $DISTNAME"
-  rm "$@"
-else
-  aptly repo add -remove-files "$DISTNAME" "$@"
-  aptly publish update "$DISTNAME" filesystem:"${DISTNAME%-*}":
-fi
+for package in "$@"; do
+  set +e
+  aptly repo search "$DISTNAME" "${package%.deb}" >/dev/null 2>&1
+  RET=$?
+  set -e
+  if [[ $RET -eq 0 ]]; then
+    echo "Not adding $package, it is already present in repo $DISTNAME"
+    rm "$package"
+  else
+    aptly repo add -remove-files "$DISTNAME" "$package"
+  fi
+done
+aptly publish update "$DISTNAME" filesystem:"${DISTNAME%-*}":
 """
 
     def __init__(self, glob_root, rel_globs, target, ssh_host, ssh_opts, repo):
