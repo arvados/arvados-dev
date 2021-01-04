@@ -11,6 +11,8 @@ import subprocess
 import pprint
 import re
 
+from datetime import date
+
 class DebugExecutor:
   def __init__(self, package_list):
     self.package_list = package_list
@@ -100,6 +102,7 @@ def distro(astring):
         raise ValueError
     return astring
 
+today = date.today()
 parser = argparse.ArgumentParser(description='List the packages to delete.')
 parser.add_argument('distro',
                     type=distro,
@@ -111,7 +114,7 @@ parser.add_argument('--min_packages', type=int,
                     default=5,
                     help='minimum amount of packages to leave in the repo (default:  %(default)s)')
 parser.add_argument('--cutoff_date', type=lambda s: datetime.datetime.strptime(s, '%Y-%m-%d'),
-                    default='2017-06-31',
+                    default=today.strftime("%Y-%m-%d"),
                     help='date to cut-off in format YYYY-MM-DD (default:  %(default)s)')
 
 args = parser.parse_args()
@@ -119,7 +122,6 @@ args = parser.parse_args()
 
 p = CollectPackageName(args.repo_dir, args.distro, args.min_packages,  args.cutoff_date)
 
-#executor = DebugExecutor(p.collect_packages())
 executor = MoveExecutor(args.distro, p.collect_packages())
 
 executor.move_it()
