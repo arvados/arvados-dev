@@ -22,27 +22,34 @@ class DebugExecutor:
       print (a[2])
 
 class MoveExecutor:
-  def __init__(self, distro, package_list):
-    self.package_list = package_list
+  def __init__(self, distro, dry_run, package_list):
     self.distro = distro
+    self.dry_run = dry_run
+    self.package_list = package_list
 
   def move_it(self):
     for a in self.package_list:
-      if a[2]:
-        source = a[0]
+      if a[3]:
+        source = self.distro
         destination = source.replace('dev','attic')
-        os.makedirs(os.path.dirname(destination), exist_ok=True)
-        print ("Moving " + a[0] + " to " + destination)
-        f = os.path.basename(os.path.splitext(a[0])[0])
-        output = subprocess.getoutput("aptly repo move " + source + " " + destination)
+        f = os.path.basename(os.path.splitext(a[1])[0])
+        print ("Moving " + f + " to " + destination)
+        extra = ""
+        if self.dry_run:
+            extra = "-dry-run "
+        output = subprocess.getoutput("aptly repo move " + extra + source + " " + destination + " " + f)
         print(output)
 
   def update_it(self):
     distroBase = re.sub('-.*$', '', self.distro)
-    output = subprocess.getoutput("aptly publish update " + distroBase + "-dev filesystem:" + distroBase + ":")
-    print(output)
-    output = subprocess.getoutput("aptly publish update " + distroBase + "-attic filesystem:" + distroBase + ":")
-    print(output)
+    if not self.dry_run:
+        output = subprocess.getoutput("aptly publish update " + distroBase + "-dev filesystem:" + distroBase + ":")
+        print(output)
+        output = subprocess.getoutput("aptly publish update " + distroBase + "-attic filesystem:" + distroBase + ":")
+        print(output)
+    else:
+        print("Dry-run: skipping aptly publish update " + distroBase + "-dev filesystem:" + distroBase + ":")
+        print("Dry-run: skipping aptly publish update " + distroBase + "-attic filesystem:" + distroBase + ":")
 
 class CollectPackageName:
   def __init__(self, cache_dir, distro, min_packages,  cutoff_date):
@@ -85,13 +92,13 @@ class CollectPackageName:
     ## separate all file into packages. (use the first element in the tuple for this)
     dictionary_per_package  = {}
     for x in tuples_with_packages:
-      dictionary_per_package.setdefault(x[0], []).append(x[1:])
+      dictionary_per_package.setdefault(x[0], []).append(x[0:])
 
     for pkg_name, metadata in dictionary_per_package.items():
       candidates_local_copy = metadata[:]
 
       ## order them by date
-      candidates_local_copy.sort(key=lambda tup: tup[1])
+      candidates_local_copy.sort(key=lambda tup: tup[2])
 
       return_value.extend(candidates_local_copy[:-self.min_packages])
 
@@ -116,13 +123,16 @@ parser.add_argument('--min_packages', type=int,
 parser.add_argument('--cutoff_date', type=lambda s: datetime.datetime.strptime(s, '%Y-%m-%d'),
                     default=today.strftime("%Y-%m-%d"),
                     help='date to cut-off in format YYYY-MM-DD (default:  %(default)s)')
+parser.add_argument('--dry_run', type=bool,
+                    default=False,
+                    help='show what would be done, without doing it (default:  %(default)s)')
 
 args = parser.parse_args()
 
 
 p = CollectPackageName(args.repo_dir, args.distro, args.min_packages,  args.cutoff_date)
 
-executor = MoveExecutor(args.distro, p.collect_packages())
+executor = MoveExecutor(args.distro, args.dry_run, p.collect_packages())
 
 executor.move_it()
 executor.update_it()
