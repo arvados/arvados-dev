@@ -95,9 +95,15 @@ class CollectPackageName:
 
     return return_value
 
+def distro(astring):
+    if re.fullmatch(r'.*-dev', astring) == None:
+        raise ValueError
+    return astring
+
 parser = argparse.ArgumentParser(description='List the packages to delete.')
-parser.add_argument('distro', choices=['bionic-dev','jessie-dev','precise-dev','stretch-dev','trusty-dev','wheezy-dev','xenial-dev','buster-dev'],
-                    help='distro to do the clean up')
+parser.add_argument('distro',
+                    type=distro,
+                    help='distro to process, must be a dev repository, e.g. buster-dev')
 parser.add_argument('--repo_dir',
                     default='/var/www/aptly_public/',
                     help='parent directory of the aptly repositories (default:  %(default)s)')
