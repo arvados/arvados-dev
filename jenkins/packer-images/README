@@ -8,6 +8,10 @@ The files under this directory are used to create images used in our Jenkins CI.
 
 packer build jenkins-image-arvados-tests.json
 
+*** IMAGE FOR RUNNING WB2 TESTS ***
+
+packer build jenkins-image-workbench2.json
+
 *** IMAGE FOR RUNNING FEDERATION TESTS ***
 
 packer build jenkins-image-federation-tests.json
