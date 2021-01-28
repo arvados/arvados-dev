@@ -29,12 +29,13 @@ fi
 
 # Only numbered package versions are supposed to go into the stable repositories
 TMP=$(echo "$PACKAGES_TO_PUBLISH" | sed 's/versions://g;')
-VALIDATED_PACKAGES_TO_PUBLISH=`echo "$TMP" | sed -nE '/^.*: [0-9].[0-9].[0-9]-[0-9]$/p'`
+VERPATTERN='[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?-[0-9]+'
+VALIDATED_PACKAGES_TO_PUBLISH=`echo "$TMP" | sed -nE '/^.*: '"$VERPATTERN"'$/p'`
 
 if [[ "$TMP" != "$VALIDATED_PACKAGES_TO_PUBLISH" ]]; then
   echo "The list of packages has invalid syntax. each line must be of the format:"
   echo
-  echo "packagename: [0-9].[0-9].[0-9]-[0-9]"
+  echo "packagename: $VERPATTERN"
   echo
   exit 253
 fi
