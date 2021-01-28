@@ -56,7 +56,7 @@ class TimestampFile:
         try:
             os.makedirs(p)
         except OSError as exc:
-            if exc.errno == errno.EEXIST and os.path.isdir(path):
+            if exc.errno == errno.EEXIST and os.path.isdir(p):
                 pass
             else:
                 raise
