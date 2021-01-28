@@ -5,6 +5,7 @@
 # SPDX-License-Identifier: AGPL-3.0
 
 import argparse
+import errno
 import functools
 import glob
 import locale
@@ -50,6 +51,15 @@ def run_and_grep(cmd, read_output, *regexps,
 class TimestampFile:
     def __init__(self, path):
         self.path = path
+        # Make sure the dirname for `path` exists
+        p = os.path.dirname(path)
+        try:
+            os.makedirs(p)
+        except OSError as exc:
+            if exc.errno == errno.EEXIST and os.path.isdir(path):
+                pass
+            else:
+                raise
         self.start_time = time.time()
 
     def last_upload(self):
