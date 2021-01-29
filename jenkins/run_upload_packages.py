@@ -69,9 +69,18 @@ class TimestampFile:
             return -1
 
     def update(self):
-        os.close(os.open(self.path, os.O_CREAT | os.O_APPEND))
-        os.utime(self.path, (time.time(), self.start_time))
-
+        try:
+            os.close(os.open(self.path, os.O_CREAT | os.O_APPEND))
+            os.utime(self.path, (time.time(), self.start_time))
+        except:
+            # when the packages directory is created/populated by a build in a
+            # docker container, as root, the script that runs the upload
+            # doesn't always have permission to touch a timestamp file there.
+            # In production, we build/upload from ephemeral machines, which
+            # means that the timestamp mechanism is not used. We print a
+            # warning and move on without erroring out.
+            print("Warning: unable to update timestamp file",self.path,"permission problem?")
+            pass
 
 class PackageSuite:
     NEED_SSH = False
