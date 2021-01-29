@@ -237,7 +237,7 @@ cd "$1"; shift
 REPODIR=$1; shift
 rpmsign --addsign "$@" </dev/null
 mv "$@" "$REPODIR"
-createrepo "$REPODIR"
+createrepo -c ~/.createrepo-cache --update "$REPODIR"
 """
     REPO_ROOT = '/var/www/rpm.arvados.org/'
 
