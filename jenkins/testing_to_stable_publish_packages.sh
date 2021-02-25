@@ -79,11 +79,13 @@ else
     for P in ${DEBIAN_PACKAGES}; do
       aptly repo search ${DISTNAME}-testing "${P}"
       if [ $? -ne 0 ]; then
-        FAILED_PACKAGES="${FAILED_PACKAGES} ${P}"
+        echo "ERROR: unable to find a match for '${P}' in ${DISTNAME}-testing"
+        FAILED_PACKAGES="${FAILED_PACKAGES} ${DISTNAME}-testing:${P}"
       else
         aptly repo copy ${DISTNAME}-testing ${DISTNAME} "${P}"
         if [ $? -ne 0 ]; then
-          FAILED_PACKAGES="${FAILED_PACKAGES} ${P}"
+          echo "ERROR: unable to copy '${P}' from ${DISTNAME}-testing to ${DISTNAME}"
+          FAILED_PACKAGES="${FAILED_PACKAGES} ${DISTNAME}-testing:${P}"
         fi
       fi
     done
