@@ -31,8 +31,8 @@ done
 # Make sure the variables are set or provide an example of how to use them
 if [ -z "${packages}" ]; then
   echo "You must provide a comma-separated list of packages to publish, ie."
-  echo "* Debian: --packages=arvados-ws_0.1.20170906144951.22418ed6e-1_amd64.deb,keep-exercise_*,*170906144951*"
-  echo "* Centos: --packages=arvados-ws_0.1.20170906144951.22418ed6e-1.x86_64.rpm,keep-exercise_0.1.20170906144951.22418ed6e-1.x86_64.rpm,crunch-dispatch-local_0.1.20170906144951.22418ed6e-1.x86_64.rpm"
+  echo "* Debian: --packages=arvados-ws:0.1.20170906144951.22418ed6e-1,keep-exercise:1.2.3-1"
+  echo "* Centos: --packages=arvados-ws:0.1.20170906144951.22418ed6e-1,keep-exercise:1.2.3-1"
   exit 254
 fi
 if [ -z "${distros}" ]; then
@@ -43,10 +43,11 @@ if [ -z "${distros}" ]; then
 fi
 
 DIST_LIST=$(echo ${distros} | sed s/,/' '/g |tr '[:upper:]' '[:lower:]')
-PACKAGES=$(echo ${packages} | sed s/,/' '/g)
+CENTOS_PACKAGES=$(echo ${packages} | sed 's/\([a-z-]*\):[[:blank:]]*\([0-9.-]*\)/\1*\2*/g; s/,/ /g;')
+DEBIAN_PACKAGES=$(echo ${packages} | sed 's/\([a-z-]*\):[[:blank:]]*\([0-9.-]*\)/\1 (= \2)/g;')
 
 if ( echo ${DIST_LIST} |grep -q centos ); then
-  for DISTNAME in ${DIST_LIST}; do 
+  for DISTNAME in ${DIST_LIST}; do
     case ${DISTNAME} in
       'centos7')
         DIST_DIR_TEST='7/testing/x86_64'
@@ -60,7 +61,7 @@ if ( echo ${DIST_LIST} |grep -q centos ); then
     cd ${RPM_REPO_BASE_DIR}
     mkdir -p ${RPM_REPO_BASE_DIR}/CentOS/${DIST_DIR_PROD}
     echo "Copying packages ..."
-    for P in ${PACKAGES}; do
+    for P in ${CENTOS_PACKAGES}; do
       cp ${RPM_REPO_BASE_DIR}/CentOS/${DIST_DIR_TEST}/${P} ${RPM_REPO_BASE_DIR}/CentOS/${DIST_DIR_PROD}/
       if [ $? -ne 0 ]; then
         FAILED_PACKAGES="${FAILED_PACKAGES} ${P}"
@@ -73,9 +74,20 @@ else
   for DISTNAME in ${DIST_LIST}; do
     ADDED=()
     echo "Copying packages ..."
-    for P in ${PACKAGES}; do
-      aptly repo copy ${DISTNAME}-testing ${DISTNAME} $(basename ${P})
+    OLDIFS=$IFS
+    IFS=$','
+    for P in ${DEBIAN_PACKAGES}; do
+      aptly repo search ${DISTNAME}-testing "${P}"
+      if [ $? -ne 0 ]; then
+        FAILED_PACKAGES="${FAILED_PACKAGES} ${P}"
+      else
+        aptly repo copy ${DISTNAME}-testing ${DISTNAME} "${P}"
+        if [ $? -ne 0 ]; then
+          FAILED_PACKAGES="${FAILED_PACKAGES} ${P}"
+        fi
+      fi
     done
+    IFS=$OLDIFS
     echo "Publishing ${DISTNAME} repository..."
     aptly publish update ${DISTNAME} filesystem:${DISTNAME}:
   done
@@ -84,6 +96,7 @@ fi
 if [ "${FAILED_PACKAGES}" != "" ]; then
   echo "PACKAGES THAT FAILED TO PUBLISH"
   echo "${FAILED_PACKAGES}"
+  exit 252
 else
   echo "All packages published correctly"
 fi

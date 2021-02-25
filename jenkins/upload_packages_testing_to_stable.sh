@@ -42,7 +42,7 @@ fi
 
 # Sanitize the vars in a way suitable to be used by the remote 'publish_packages.sh' script
 # Just to make copying a single line, and not having to loop over it
-PACKAGES_LIST=$(echo ${PACKAGES_TO_PUBLISH} | sed 's/versions://g; s/\([a-z-]*\):[[:blank:]]*\([0-9.-]*\)/\1*\2*,/g; s/[[:blank:]]//g; s/,$//g;')
+PACKAGES_LIST=$(echo ${PACKAGES_TO_PUBLISH} | sed 's/versions://g; s/\([a-z-]*\):[[:blank:]]*\([0-9.-]*\)/\1:\2,/g; s/[[:blank:]]//g; s/,$//g;')
 
 DISTROS=$(echo "${LSB_DISTRIB_CODENAMES}"|sed s/[[:space:]]/,/g |tr '[:upper:]' '[:lower:]')
 
@@ -63,12 +63,7 @@ ssh -t \
     -o "StrictHostKeyChecking no" \
     -o "ConnectTimeout 5" \
     ${REPO_SERVER} \
-    "${REMOTE_CMD}" | tee ${TMP_FILE}
+    "${REMOTE_CMD}"
 ECODE=$?
 
-grep -q "FAILED TO PUBLISH" ${TMP_FILE}
-if [ $? -eq 0 ]; then
-  ECODE=1
-fi
-rm -f ${TMP_FILE}
 exit ${ECODE}
