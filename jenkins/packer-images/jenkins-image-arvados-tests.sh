@@ -7,7 +7,7 @@
 set -eo pipefail
 
 # Install the dependencies for arvados-server
-sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get install -y libpam0g-dev wget"
+sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get install -y libpam0g-dev wget build-essential"
 
 # Get Go 1.16.3
 cd /usr/src
