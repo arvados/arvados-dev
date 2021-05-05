@@ -7,7 +7,7 @@
       "type": "googlecompute",
       "account_file": "{{user `key_file` }}",
       "project_id": "phoenix-project-42-ci",
-      "source_image": "debian-10-buster-v20200714",
+      "source_image": "debian-10-buster-v20210420",
       "zone": "us-central1-b",
       "disk_size": "10",
       "image_name": "jenkins-image-arvados-tests-{{isotime \"20060102150405\"}}",
