@@ -22,7 +22,7 @@ sudo ln -s /usr/local/bin/gofmt-1.16.3 /usr/local/bin/gofmt
 cd /usr/src
 sudo git clone arvados.git
 cd arvados
-go mod download
+sudo go mod download
 sudo go run ./cmd/arvados-server install -type test
 
 # Our Jenkins jobs use this directory to store the temporary files for the tests
