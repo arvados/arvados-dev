@@ -31,5 +31,6 @@ mkdir /home/jenkins/tmp
 # Preseed the run-tests.sh cache. This is a little bit silly (a lot of this
 # stuff was already done by the call to `./cmd/arvados-server install -type
 # test` above, but they do not share a cache.
-sudo ./build/run-tests.sh WORKSPACE=/usr/src/arvados --temp /home/jenkins/tmp --only install
 sudo chown jenkins:jenkins /home/jenkins -R
+sudo chown jenkins:jenkins /usr/src/arvados -R
+sudo -u jenkins ./build/run-tests.sh WORKSPACE=/usr/src/arvados --temp /home/jenkins/tmp --only install
