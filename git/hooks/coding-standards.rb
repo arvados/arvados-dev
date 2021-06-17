@@ -22,9 +22,9 @@ def blacklist bl
     # A branch is being deleted. Do not check old commits for DCO signoff!
     all_revs    = []
   elsif ($oldrev[0,6] ==  '000000')
-    if $refname != 'refs/heads/master'
+    if $refname != 'refs/heads/main'
       # A new branch was pushed. Check all new commits in this branch.
-      all_revs  = `git log --pretty=format:%H master..#{$newrev}`.split("\n")
+      all_revs  = `git log --pretty=format:%H main..#{$newrev}`.split("\n")
     else
       # When does this happen?
       all_revs  = [$newrev]
@@ -45,8 +45,8 @@ end
 
 blacklist ['26d74dc0524c87c5dcc0c76040ce413a4848b57a']
 
-# Only enforce policy on the master branch
-exit 0 if $refname != 'refs/heads/master'
+# Only enforce policy on the main branch
+exit 0 if $refname != 'refs/heads/main'
 
 puts "Enforcing Policies..."
 puts "(#{$refname}) (#{$oldrev[0,6]}) (#{$newrev[0,6]})"
@@ -54,9 +54,9 @@ puts "(#{$refname}) (#{$oldrev[0,6]}) (#{$newrev[0,6]})"
 $regex = /\[ref: (\d+)\]/
 
 $broken_commit_message = /Please enter a commit message to explain why this merge is necessary/
-$wrong_way_merge_master = /Merge( remote-tracking)? branch '([^\/]+\/)?master' into/
-$merge_master = /Merge branch '[^']+'((?! into)| into master)/
-$pull_merge = /Merge branch 'master' of /
+$wrong_way_merge_main = /Merge( remote-tracking)? branch '([^\/]+\/)?master' into/
+$merge_main = /Merge branch '[^']+'((?! into)| into master)/
+$pull_merge = /Merge branch 'main' of /
 $refs_or_closes_or_no_issue = /(refs #|closes #|fixes #|no issue #)/i
 
 # enforced custom commit message format
@@ -69,10 +69,10 @@ def check_message_format
 
   merge_revs.each do |rev|
     message = `git cat-file commit #{rev} | sed '1,/^$/d'`
-    if $wrong_way_merge_master.match(message)
-      puts "\n[POLICY] Only non-fast-forward merges into master are allowed. Please"
-      puts "reset your master branch:"
-      puts "  git reset --hard origin/master"
+    if $wrong_way_merge_main.match(message)
+      puts "\n[POLICY] Only non-fast-forward merges into main are allowed. Please"
+      puts "reset your main branch:"
+      puts "  git reset --hard origin/main"
       puts "and then merge your branch with the --no-ff option:"
       puts "  git merge your-branch --no-ff\n"
       puts "Remember to add a reference to an issue number in the merge commit!\n"
@@ -85,9 +85,9 @@ def check_message_format
       broken = true
       no_ff = true
     elsif $pull_merge.match(message)
-      puts "\n[POLICY] This appears to be a git pull merge of remote master into local"
-      puts "master.  In order to maintain a linear first-parent history of master,"
-      puts "please reset your branch and remerge or rebase using the latest master.\n"
+      puts "\n[POLICY] This appears to be a git pull merge of remote main into local"
+      puts "main.  In order to maintain a linear first-parent history of master,"
+      puts "please reset your branch and remerge or rebase using the latest main.\n"
       puts "\n******************************************************************\n"
       puts "\nOffending commit: #{rev}\n"
       puts "\nOffending commit message:\n\n"
@@ -95,9 +95,9 @@ def check_message_format
       puts "\n******************************************************************\n"
       puts "\n\n"
       broken = true
-    elsif not $merge_master.match(message) and not
+    elsif not $merge_main.match(message) and not
       puts "\n[POLICY] This does not appear to be a merge of a feature"
-      puts "branch into master.  Merges must follow the format"
+      puts "branch into main.  Merges must follow the format"
       puts "\"Merge branch 'feature-branch'\".\n"
       puts "\n******************************************************************\n"
       puts "\nOffending commit: #{rev}\n"
@@ -127,7 +127,7 @@ def check_message_format
     # this test will complain about *every* commit in the merge otherwise, obscuring
     # the real reason for the rejection (the no_ff merge)
     if not no_ff and not $refs_or_closes_or_no_issue.match(message)
-      puts "\n[POLICY] All commits to master must include an issue using \"refs #\" or"
+      puts "\n[POLICY] All commits to main must include an issue using \"refs #\" or"
       puts "\"closes #\", or specify \"no issue #\"\n"
       puts "\n******************************************************************\n"
       puts "\nOffending commit: #{rev}\n"

@@ -30,9 +30,9 @@ def check_message_format
     # A branch is being deleted. Do not check old commits for DCO signoff!
     all_revs    = []
   elsif ($oldrev[0,6] ==  '000000')
-    if $refname != 'refs/heads/master'
+    if $refname != 'refs/heads/main'
       # A new branch was pushed. Check all new commits in this branch.
-      all_revs  = `git log --pretty=format:%H master..#{$newrev}`.split("\n")
+      all_revs  = `git log --pretty=format:%H main..#{$newrev}`.split("\n")
     else
       # When does this happen?
       all_revs  = [$newrev]

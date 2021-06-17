@@ -50,13 +50,13 @@ def check_copyright_headers
     all_objects = []
     commits = []
   elsif ($oldrev[0,6] ==  '000000')
-    if $refname != 'refs/heads/master'
+    if $refname != 'refs/heads/main'
       # A new branch was pushed. Check all new commits in this branch.
-      puts "git rev-list --objects master..#{$newrev} | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^blob //p'"
-      blob_objects  = `git rev-list --objects master..#{$newrev} | git cat-file --follow-symlinks --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^blob //p'`.split("\n")
-      commit_objects  = `git rev-list --objects master..#{$newrev} | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^commit //p'`.split("\n")
+      puts "git rev-list --objects main..#{$newrev} | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^blob //p'"
+      blob_objects  = `git rev-list --objects main..#{$newrev} | git cat-file --follow-symlinks --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^blob //p'`.split("\n")
+      commit_objects  = `git rev-list --objects main..#{$newrev} | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^commit //p'`.split("\n")
       all_objects = blob_objects + commit_objects
-      commits = `git rev-list master..#{$newrev}`.split("\n")
+      commits = `git rev-list main..#{$newrev}`.split("\n")
     else
       # When does this happen?
       puts "UNEXPECTED ERROR"
