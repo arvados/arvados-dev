@@ -86,7 +86,7 @@ RAILS_ENV=performance bundle exec rake test:benchmark
 ECODE=$?
 
 if [[ "$REVISION" != '' ]]; then
-  git checkout master
+  git checkout main
 fi
 
 if [[ "$ECODE" != "0" ]]; then

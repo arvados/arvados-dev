@@ -23,7 +23,7 @@ trap '_exit_handler $LINENO' EXIT ERR
 branches_to_keep="master|main|integration|dev|staging|.*\-dev"
 
 git remote update --prune
-git checkout master
+git checkout main
 git pull
 
 git branch --remote --merged | \

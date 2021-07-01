@@ -54,8 +54,8 @@ puts "(#{$refname}) (#{$oldrev[0,6]}) (#{$newrev[0,6]})"
 $regex = /\[ref: (\d+)\]/
 
 $broken_commit_message = /Please enter a commit message to explain why this merge is necessary/
-$wrong_way_merge_main = /Merge( remote-tracking)? branch '([^\/]+\/)?master' into/
-$merge_main = /Merge branch '[^']+'((?! into)| into master)/
+$wrong_way_merge_main = /Merge( remote-tracking)? branch '([^\/]+\/)?main' into/
+$merge_main = /Merge branch '[^']+'((?! into)| into main)/
 $pull_merge = /Merge branch 'main' of /
 $refs_or_closes_or_no_issue = /(refs #|closes #|fixes #|no issue #)/i
 
@@ -86,7 +86,7 @@ def check_message_format
       no_ff = true
     elsif $pull_merge.match(message)
       puts "\n[POLICY] This appears to be a git pull merge of remote main into local"
-      puts "main.  In order to maintain a linear first-parent history of master,"
+      puts "main.  In order to maintain a linear first-parent history of main,"
       puts "please reset your branch and remerge or rebase using the latest main.\n"
       puts "\n******************************************************************\n"
       puts "\nOffending commit: #{rev}\n"

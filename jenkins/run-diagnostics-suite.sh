@@ -89,7 +89,7 @@ fi
 ECODE=$?
 
 if [[ "$REVISION" != '' ]]; then
-  git checkout master
+  git checkout main
 fi
 
 if [[ "$ECODE" != "0" ]]; then
