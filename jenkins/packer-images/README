@@ -24,3 +24,7 @@ packer build jenkins-image-with-docker.json
 
 packer build jenkins-image-k8s-tests.json
 
+*** IMAGE FOR TESTING THE ARVADOS-FORMULA ***
+
+packer build jenkins-image-arvados-formula-tests.json
+
