@@ -12,7 +12,8 @@ sudo usermod -a -G docker jenkins
 
 cd /tmp
 curl -L https://git.arvados.org/arvados-formula.git/blob_plain/refs/heads/main:/Gemfile -o /tmp/Gemfile
-wget -L https://git.arvados.org/arvados-formula.git/blob_plain/refs/heads/main:/Gemfile.lock -o /tmp/Gemfile.lock
+curl -L https://git.arvados.org/arvados-formula.git/blob_plain/refs/heads/main:/Gemfile.lock -o /tmp/Gemfile.lock
+
 sudo su -c "gem install bundler"
 sudo su -c "bundler install"
 sudo su -c "gem install kitchen-docker"
