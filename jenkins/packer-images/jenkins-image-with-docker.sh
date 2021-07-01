@@ -12,11 +12,11 @@ sudo usermod -a -G docker jenkins
 
 #Packer install
 cd /tmp
-wget https://releases.hashicorp.com/packer/1.6.0/packer_1.6.0_linux_amd64.zip
-unzip packer_1.6.0_linux_amd64.zip packer
+wget https://releases.hashicorp.com/packer/1.7.2/packer_1.7.2_linux_amd64.zip
+unzip packer_1.7.2_linux_amd64.zip packer
 sudo mv packer /usr/local/bin/
 
 # Install the arvados-dev repo where the Jenkins job expects it
 cd /usr/local
-sudo git clone --depth 1 https://github.com/curoverse/arvados-dev
+sudo git clone --depth 1 https://github.com/arvados/arvados-dev
 sudo chown -R jenkins:jenkins /usr/local/arvados-dev/
