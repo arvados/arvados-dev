@@ -1,6 +1,7 @@
 {
   "variables": {
-        "key_file": "{{env `packerbuildkey`}}"
+        "key_file": "{{env `packerbuildkey`}}",
+        "git_hash": "{{env `git_hash`}}"
     },
   "builders": [
     {
@@ -31,6 +32,9 @@
     },
     {
       "type": "shell",
+      "environment_vars": [
+        "GIT_HASH={{ user `git_hash` }}"
+      ],
       "script": "./jenkins-image-workbench2.sh"
     }
   ]
