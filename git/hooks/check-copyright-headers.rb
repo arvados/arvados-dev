@@ -58,9 +58,12 @@ def check_copyright_headers
       all_objects = blob_objects + commit_objects
       commits = `git rev-list main..#{$newrev}`.split("\n")
     else
-      # When does this happen?
-      puts "UNEXPECTED ERROR"
-      exit 1
+      # First push to an empty repository
+      puts "git rev-list --objects #{$newrev} | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^blob //p'"
+      blob_objects  = `git rev-list --objects #{$newrev} | git cat-file --follow-symlinks --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^blob //p'`.split("\n")
+      commit_objects  = `git rev-list --objects #{$newrev} | git cat-file --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^commit //p'`.split("\n")
+      all_objects = blob_objects + commit_objects
+      commits = `git rev-list #{$newrev}`.split("\n")
     end
   else
     blob_objects = `git rev-list --objects #{$oldrev}..#{$newrev} --not --branches='*' | git cat-file --follow-symlinks --batch-check='%(objecttype) %(objectname) %(objectsize) %(rest)'| sed -n 's/^blob //p'`.split("\n")
