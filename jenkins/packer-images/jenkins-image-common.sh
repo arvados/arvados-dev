@@ -13,11 +13,25 @@ sudo su -c "echo ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDH8swFWEfEfHhA+C5ezV8SXO/
 echo "deb http://deb.debian.org/debian buster-backports main" | sudo tee /etc/apt/sources.list.d/buster-backports.list
 
 # Install a few dependency packages
-sudo su -c "apt-get update"
-sudo su -c "DEBIAN_FRONTEND=noninteractive apt install -y git netcat default-jdk"
-# Remove unattended-upgrades so that it doesn't interfere with our nodes at startup
-sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get remove -y unattended-upgrades"
-sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get autoremove -y"
+# First, let's figure out the OS we're working on
+OS_ID=$(grep ^ID= /etc/os-release |cut -f 2 -d \")
+case ${OS_ID} in
+  "centos")
+    PREINSTALL_CMD="/bin/true"
+    INSTALL_CMD="yum -y"
+    POSTINSTALL_CMD="/bin/true"
+    PKGS="git java-11-openjdk"
+  "debian","ubuntu")
+    INSTALL_CMD="DEBIAN_FRONTEND=noninteractive apt install -y"
+    # SUFFIX packages with - to remove them
+    # Remove unattended-upgrades so that it doesn't interfere with our nodes at startup
+    PKGS="git default-jdk unattended-upgrades-"
+    POSTINSTALL_CMD="DEBIAN_FRONTEND=noninteractive apt autopurge -y"
+esac
+
+sudo su -c "${PREINSTALL_CMD}"
+sudo su -c "${INSTALL_CMD} ${PKGS}"
+sudo su -c "${POSTINSTALL_CMD}"
 
 # create a reference repository (bare git repo)
 # jenkins will use this to speed up the checkout for each job
