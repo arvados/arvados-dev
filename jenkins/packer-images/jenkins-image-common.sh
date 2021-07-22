@@ -13,10 +13,12 @@ sudo su -c "echo ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDH8swFWEfEfHhA+C5ezV8SXO/
 # Install a few dependency packages
 # First, let's figure out the OS we're working on
 OS_ID=$(grep ^ID= /etc/os-release |cut -f 2 -d \")
+echo "Detected distro: ${OS_ID}"
+
 case ${OS_ID} in
   centos)
     PREINSTALL_CMD="/bin/true"
-    INSTALL_CMD="yum -y"
+    INSTALL_CMD="yum install -y"
     POSTINSTALL_CMD="/bin/true"
     PKGS="git nmap-ncat java-11-openjdk"
     ;;
