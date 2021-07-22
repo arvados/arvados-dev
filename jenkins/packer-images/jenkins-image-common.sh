@@ -14,12 +14,13 @@ sudo su -c "echo ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDH8swFWEfEfHhA+C5ezV8SXO/
 # First, let's figure out the OS we're working on
 OS_ID=$(grep ^ID= /etc/os-release |cut -f 2 -d \")
 case ${OS_ID} in
-  "centos")
+  centos)
     PREINSTALL_CMD="/bin/true"
     INSTALL_CMD="yum -y"
     POSTINSTALL_CMD="/bin/true"
     PKGS="git nmap-ncat java-11-openjdk"
-  "debian","ubuntu")
+    ;;
+  debian|ubuntu)
     echo "deb http://deb.debian.org/debian buster-backports main" | sudo tee /etc/apt/sources.list.d/buster-backports.list
 
     PREINSTALL_CMD="DEBIAN_FRONTEND=noninteractive apt update"
@@ -28,6 +29,7 @@ case ${OS_ID} in
     # SUFFIX packages with - to remove them
     # Remove unattended-upgrades so that it doesn't interfere with our nodes at startup
     PKGS="git netcat-traditional default-jdk unattended-upgrades-"
+    ;;
 esac
 
 sudo su -c "${PREINSTALL_CMD}"
