@@ -26,5 +26,6 @@
     {
       "type": "shell",
       "script": "./jenkins-image-common.sh"
+    }
   ]
 }
