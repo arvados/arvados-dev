@@ -20,14 +20,14 @@ case ${OS_ID} in
     PREINSTALL_CMD="/bin/true"
     INSTALL_CMD="yum -y"
     POSTINSTALL_CMD="/bin/true"
-    PKGS="git java-11-openjdk"
+    PKGS="git nmap-ncat java-11-openjdk"
   "debian","ubuntu")
     PREINSTALL_CMD="DEBIAN_FRONTEND=noninteractive apt update"
     INSTALL_CMD="DEBIAN_FRONTEND=noninteractive apt install -y"
     POSTINSTALL_CMD="DEBIAN_FRONTEND=noninteractive apt autopurge -y"
     # SUFFIX packages with - to remove them
     # Remove unattended-upgrades so that it doesn't interfere with our nodes at startup
-    PKGS="git default-jdk unattended-upgrades-"
+    PKGS="git netcat-traditional default-jdk unattended-upgrades-"
 esac
 
 sudo su -c "${PREINSTALL_CMD}"
