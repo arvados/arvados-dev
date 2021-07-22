@@ -1,0 +1,29 @@
+{
+  "variables": {
+    "key_file": "{{env `packerbuildkey`}}",
+    "source_image": ""
+  },
+  "builders": [
+    {
+      "type": "googlecompute",
+      "account_file": "{{user `key_file` }}",
+      "project_id": "phoenix-project-42-ci",
+      "source_image": "{{user `source_image`}}",
+      "zone": "us-central1-b",
+      "disk_size": "20",
+      "image_name": "jenkins-image-arvados-formula-tests-{{isotime \"20060102150405\"}}",
+      "image_family": "jenkins",
+      "ssh_username": "jenkins"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "file",
+      "source": "node-ready.sh",
+      "destination": "/tmp/node-ready.sh"
+    },
+    {
+      "type": "shell",
+      "script": "./jenkins-image-common.sh"
+  ]
+}
