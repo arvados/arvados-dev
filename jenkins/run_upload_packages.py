@@ -225,11 +225,8 @@ aptly publish update "$DISTNAME" filesystem:"${DISTNAME%-*}":
     def __init__(self, glob_root, rel_globs, target, ssh_host, ssh_opts, repo):
         super().__init__(glob_root, rel_globs, target, ssh_host, ssh_opts)
         self.TARGET_DISTNAMES = {
-            'debian8': 'jessie-'+repo,
-            'debian9': 'stretch-'+repo,
             'debian10': 'buster-'+repo,
-            'ubuntu1404': 'trusty-'+repo,
-            'ubuntu1604': 'xenial-'+repo,
+            'debian11': 'bullseye-'+repo,
             'ubuntu1804': 'bionic-'+repo,
             'ubuntu2004': 'focal-'+repo,
             }
@@ -307,7 +304,7 @@ def parse_arguments(arguments):
     if args.workspace is None:
         parser.error("workspace not set from command line or environment")
 
-    for target in ['debian8', 'debian9', 'debian10', 'ubuntu1404', 'ubuntu1604', 'ubuntu1804', 'ubuntu2004']:
+    for target in ['debian10', 'debian11', 'ubuntu1804', 'ubuntu2004']:
         PACKAGE_SUITES[target] = _define_suite(
             DebianPackageSuite, os.path.join('packages', target, '*.deb'),
             target=target, repo=args.repo)
