@@ -26,9 +26,9 @@ case ${OS_ID} in
     if [ ${OS_ID} = "debian" ]; then
       echo "deb http://deb.debian.org/debian buster-backports main" | sudo tee /etc/apt/sources.list.d/buster-backports.list
     fi
-    PREINSTALL_CMD="DEBIAN_FRONTEND=noninteractive apt update"
-    INSTALL_CMD="DEBIAN_FRONTEND=noninteractive apt install -y"
-    POSTINSTALL_CMD="DEBIAN_FRONTEND=noninteractive apt autopurge -y"
+    PREINSTALL_CMD="DEBIAN_FRONTEND=noninteractive apt-get update"
+    INSTALL_CMD="DEBIAN_FRONTEND=noninteractive apt-get install -y"
+    POSTINSTALL_CMD="DEBIAN_FRONTEND=noninteractive apt-get purge --autoremove -y"
     # SUFFIX packages with - to remove them
     # Remove unattended-upgrades so that it doesn't interfere with our nodes at startup
     PKGS="git netcat-traditional default-jdk unattended-upgrades-"
