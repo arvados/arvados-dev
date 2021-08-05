@@ -23,8 +23,9 @@ case ${OS_ID} in
     PKGS="git nmap-ncat java-11-openjdk"
     ;;
   debian|ubuntu)
-    echo "deb http://deb.debian.org/debian buster-backports main" | sudo tee /etc/apt/sources.list.d/buster-backports.list
-
+    if [ ${OS_ID} = "debian" ]; then
+      echo "deb http://deb.debian.org/debian buster-backports main" | sudo tee /etc/apt/sources.list.d/buster-backports.list
+    fi
     PREINSTALL_CMD="DEBIAN_FRONTEND=noninteractive apt update"
     INSTALL_CMD="DEBIAN_FRONTEND=noninteractive apt install -y"
     POSTINSTALL_CMD="DEBIAN_FRONTEND=noninteractive apt autopurge -y"
