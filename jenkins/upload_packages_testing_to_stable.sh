@@ -22,7 +22,7 @@ if [ -z "${PACKAGES_TO_PUBLISH}" ]; then
 fi
 if [ -z "${LSB_DISTRIB_CODENAMES}" ]; then
   echo "You must provide a space-separated list of LSB distribution codenames to which you want to publish to, ie."
-  echo "* Debian: jessie, xenial, stretch, etc."
+  echo "* Debian/Ubuntu: buster, bullseye, focal"
   echo "* Centos: centos7 (the only one currently supported.)"
   exit 255
 fi

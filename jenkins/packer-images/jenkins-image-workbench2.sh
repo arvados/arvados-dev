@@ -16,6 +16,10 @@ if [[ "$GIT_HASH" != "" ]]; then
   sudo git checkout $GIT_HASH
 fi
 
+# React uses a lot of filesystem watchers (via inotify). Increase the default
+# so we have a higher limit at runtime.
+echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
+
 # Build the workbench2-build docker image
 sudo make workbench2-build-image
 
