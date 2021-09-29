@@ -223,7 +223,7 @@ if [[ "$ECODE" != "0" ]]; then
   exit $ECODE
 fi
 
-run_command shell.$IDENTIFIER ECODE "cd common-workflow-language; git pull; ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN ARVADOS_API_HOST_INSECURE=$ARVADOS_API_HOST_INSECURE ./run_test.sh -j$JOBS --timeout=900 RUNNER=/home/$ACCT/arvados-cwl-runner-with-checksum.sh"
+run_command shell.$IDENTIFIER ECODE "cd common-workflow-language; git pull; ARVADOS_API_HOST=$ARVADOS_API_HOST ARVADOS_API_TOKEN=$ARVADOS_API_TOKEN ARVADOS_API_HOST_INSECURE=$ARVADOS_API_HOST_INSECURE ./run_test.sh -j$JOBS --timeout=900 RUNNER=/home/$ACCT/arvados-cwl-runner-with-checksum.sh -Sdocker_entrypoint"
 
 if [[ "$ECODE" != "0" ]]; then
   echo "Failed ./run_test.sh -j$JOBS RUNNER=/home/$ACCT/arvados-cwl-runner-with-checksum.sh"
