@@ -8,7 +8,7 @@
       "type": "googlecompute",
       "account_file": "{{user `key_file` }}",
       "project_id": "phoenix-project-42-ci",
-      "source_image": "debian-10-buster-v20210817",
+      "source_image": "debian-10-buster-v20210916",
       "zone": "us-central1-b",
       "disk_size": "20",
       "image_name": "jenkins-image-workbench2-{{isotime \"20060102150405\"}}",
