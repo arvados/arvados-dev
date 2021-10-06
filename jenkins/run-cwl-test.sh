@@ -5,6 +5,8 @@
 # SPDX-License-Identifier: AGPL-3.0
 
 set -o pipefail
+# extglob needs to be enabled for the suppression of tokens in the output
+shopt -s extglob
 
 DEBUG=0
 SSH_PORT=22
@@ -168,7 +170,7 @@ function run_command() {
       title "Connection denied or timed out"
     fi
   else
-    title "Running '${command/ARVADOS_API_TOKEN=* /ARVADOS_API_TOKEN=suppressed }' locally"
+    title "Running '${command/ARVADOS_API_TOKEN=*([-a-z0-9\/])/ARVADOS_API_TOKEN=suppressed}' locally"
     TMP_FILE=`mktemp`
     if [[ "$DEBUG" != "0" ]]; then
       bash -c "$command" | tee $TMP_FILE
