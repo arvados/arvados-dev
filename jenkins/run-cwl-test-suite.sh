@@ -104,13 +104,13 @@ if [[ "$ARVADOS_API_HOST" == "" ]] || [[ "$ARVADOS_API_TOKEN" == "" ]]; then
   exit 1
 fi
 
-if [[ ! -e common-workflow-language ]]; then
-  git clone --depth 1 https://github.com/common-workflow-language/common-workflow-language.git
+if [[ ! -e cwl-v1.2 ]]; then
+  git clone --depth 1 https://github.com/common-workflow-language/cwl-v1.2.git
 fi
 
 printf "%s\n%s\n" '#!/bin/sh' 'exec arvados-cwl-runner --api containers --compute-checksum --disable-reuse --eval-timeout 60 "$@"' > arvados-cwl-runner-with-checksum.sh
 chmod 755 arvados-cwl-runner-with-checksum.sh
 
-cd common-workflow-language
+cd cwl-v1.2
 git pull
 ./run_test.sh -j$JOBS --timeout=900 RUNNER=../arvados-cwl-runner-with-checksum.sh -Sdocker_entrypoint
