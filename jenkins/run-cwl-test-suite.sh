@@ -108,9 +108,6 @@ if [[ ! -e cwl-v1.2 ]]; then
   git clone --depth 1 https://github.com/common-workflow-language/cwl-v1.2.git
 fi
 
-printf "%s\n%s\n" '#!/bin/sh' 'exec arvados-cwl-runner --api containers --compute-checksum --disable-reuse --eval-timeout 60 "$@"' > arvados-cwl-runner-with-checksum.sh
-chmod 755 arvados-cwl-runner-with-checksum.sh
-
 cd cwl-v1.2
 git pull
-./run_test.sh -j$JOBS --timeout=900 RUNNER=../arvados-cwl-runner-with-checksum.sh -Sdocker_entrypoint
+./run_test.sh -j$JOBS --timeout=900 RUNNER=arvados-cwl-runner EXTRA="--compute-checksum --disable-reuse --eval-timeout 60" -Sdocker_entrypoint
