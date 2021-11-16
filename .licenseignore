@@ -4,3 +4,5 @@
 jenkins/packer-images/.gitignore
 jenkins/packer-images/*.json
 jenkins/packer-images/1078ECD7.asc
+go.mod
+go.sum
