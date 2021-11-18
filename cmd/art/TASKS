@@ -1,0 +1,19 @@
+Prepare release branch
+Review release branch
+Create next redmine release
+Record git commit
+Build RC packages
+Draft release notes
+Review release notes
+Test installer
+Deploy RC packages to playground
+Run test pipeline
+Sign off
+Push packages to stable
+Publish docker image, python and ruby packages
+Publish formula/installer for release
+Publish arvbox image
+Tag commits
+Update doc site
+Publish release on arvados.org
+Send out release notification

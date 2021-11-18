@@ -4,6 +4,7 @@ go 1.17
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.2
+	github.com/Masterminds/semver v1.5.0
 	github.com/go-git/go-git/v5 v5.4.2
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/viper v1.9.0
