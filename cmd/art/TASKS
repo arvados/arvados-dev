@@ -1,0 +1,23 @@
+Prepare release branch
+Update the "Upgrading Arvados and Release notes" doc page (main and release branch)
+Ensure that the entire automated testing pipeline is passing on Jenkins
+Manual testing
+Review release branch
+Create next redmine release
+Draft release notes and publish them to www-dev
+Review release notes
+Build RC packages
+Test installer
+Deploy RC packages to playground
+Run bam-to-vcf pipeline pipeline
+Approve RC for release
+Build final release packages
+Push packages to stable
+Publish docker image, python and ruby packages
+Publish formula/installer for release
+Publish arvados/arvbox-demo image
+Tag commits
+Update doc site
+Merge release notes (step 6) form "develop" to "main" and publish release on arvados.org
+Send out release notification
+Major releases only: Copy "run-tests" jobs in jenkins

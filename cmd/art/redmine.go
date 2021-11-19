@@ -5,15 +5,19 @@
 package main
 
 import (
+	"bufio"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"regexp"
 	"sort"
 	"strconv"
+	"time"
 
 	"git.arvados.org/arvados-dev.git/lib/redmine"
 	survey "github.com/AlecAivazis/survey/v2"
+	"github.com/Masterminds/semver"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
@@ -25,6 +29,7 @@ import (
 func init() {
 	rootCmd.AddCommand(redmineCmd)
 	redmineCmd.AddCommand(issuesCmd)
+	redmineCmd.AddCommand(releasesCmd)
 
 	associateIssueCmd.Flags().IntP("release", "r", 0, "Redmine release ID")
 	err := associateIssueCmd.MarkFlagRequired("release")
@@ -56,6 +61,30 @@ func init() {
 	findAndAssociateIssuesCmd.Flags().BoolP("auto-set", "a", false, "Associate issues without existing release without prompting")
 	findAndAssociateIssuesCmd.Flags().BoolP("skip-release-change", "s", false, "Skip issues already assigned to another release (do not prompt)")
 	issuesCmd.AddCommand(findAndAssociateIssuesCmd)
+
+	createReleaseIssueCmd.Flags().StringP("new-release-version", "n", "", "Semantic version number of the new release")
+	err = createReleaseIssueCmd.MarkFlagRequired("new-release-version")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	createReleaseIssueCmd.Flags().IntP("sprint", "s", 0, "Redmine sprint (aka Version) ID")
+	err = createReleaseIssueCmd.MarkFlagRequired("sprint")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	createReleaseIssueCmd.Flags().StringP("project", "p", "", "Redmine project name")
+	err = createReleaseIssueCmd.MarkFlagRequired("project")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	issuesCmd.AddCommand(createReleaseIssueCmd)
+
+	getReleaseCmd.Flags().IntP("release", "r", 0, "ID of the redmine release")
+	err = getReleaseCmd.MarkFlagRequired("release")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	releasesCmd.AddCommand(getReleaseCmd)
 }
 
 var redmineCmd = &cobra.Command{
@@ -254,13 +283,13 @@ var findAndAssociateIssuesCmd = &cobra.Command{
 		}
 		sort.Ints(keys)
 
-		redmine := redmine.NewClient(conf.Endpoint, conf.Apikey)
+		r := redmine.NewClient(conf.Endpoint, conf.Apikey)
 
 		for c, k := range keys {
 			fmt.Printf("%d (%d/%d): ", k, c+1, len(keys))
 			// Look up the issue, see if it is already associated with the desired release
 
-			i, err := redmine.GetIssue(k)
+			i, err := r.GetIssue(k)
 			if err != nil {
 				fmt.Println()
 				fmt.Printf("[error] unable to retrieve issue: %s\n", err.Error())
@@ -283,7 +312,7 @@ var findAndAssociateIssuesCmd = &cobra.Command{
 						log.Fatal(err)
 					}
 					if confirm {
-						err = redmine.SetRelease(*i, releaseID)
+						err = r.SetRelease(*i, releaseID)
 						if err != nil {
 							log.Fatal(err)
 						} else {
@@ -306,7 +335,7 @@ var findAndAssociateIssuesCmd = &cobra.Command{
 					}
 				}
 				if confirm || autoSet {
-					err = redmine.SetRelease(*i, releaseID)
+					err = r.SetRelease(*i, releaseID)
 					if err != nil {
 						log.Fatal(err)
 					} else {
@@ -316,5 +345,151 @@ var findAndAssociateIssuesCmd = &cobra.Command{
 			}
 			fmt.Println("============================================")
 		}
+	},
+}
+
+var createReleaseIssueCmd = &cobra.Command{
+	Use:   "create-release-issue",
+	Short: "Create a release ticket with numbered subtasks for all the steps on the release checklist",
+	Long: "Create a release ticket with numbered subtasks for all the steps on the release checklist.\n" +
+		"\nThe subtask subjects are read from a file named TASKS in the current directory.\n" +
+		"\nFinally, a new Redmine release will also be created for the next release.\n" +
+		"\nThe REDMINE_ENDPOINT environment variable must be set to the base URL of your redmine server." +
+		"\nThe REDMINE_APIKEY environment variable must be set to your redmine API key.",
+	Run: func(cmd *cobra.Command, args []string) {
+		newReleaseVersion, err := cmd.Flags().GetString("new-release-version")
+		if err != nil {
+			log.Fatal(fmt.Errorf("[error] can not get new release version: %s", err))
+			return
+		}
+
+		versionID, err := cmd.Flags().GetInt("sprint")
+		if err != nil {
+			log.Fatal(fmt.Errorf("[error] can not convert Redmine sprint (version) ID to integer: %s", err))
+			return
+		}
+		projectName, err := cmd.Flags().GetString("project")
+		if err != nil {
+			log.Fatal(fmt.Errorf("[error] can not get Redmine project name: %s", err))
+			return
+		}
+
+		r := redmine.NewClient(conf.Endpoint, conf.Apikey)
+
+		// Does this project exist?
+		project, err := r.GetProjectByName(projectName)
+		if err != nil {
+			log.Fatalf("[error] can not find project with name %s: %s", projectName, err)
+		}
+
+		// Is the sprint (aka "version" in redmine) in the correct state?
+		v, err := r.Version(versionID)
+		if err != nil {
+			log.Fatal(fmt.Errorf("[error] can not find sprint with id %d: %s", versionID, err))
+		}
+		if v.Status != "open" {
+			log.Fatal(fmt.Errorf("[error] the sprint must be open; the status of the sprint with id %d is '%s'", v.ID, v.Status))
+		}
+
+		i, err := r.FindOrCreateIssue("Release Arvados "+newReleaseVersion, 0, v.ID, project.ID)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if i.Status.Name != "New" {
+			log.Fatal(fmt.Errorf("the release ticket status must be 'New'; the status of the release issue with id %d is '%s'", i.ID, v.Status))
+		}
+
+		fmt.Printf("[ok] the release ticket is '%s' with ID #%d (%s/issues/%d)\n", i.Subject, i.ID, conf.Endpoint, i.ID)
+
+		// Get the list of subtasks from the "TASKS" file
+		tasks, err := os.Open("TASKS")
+		if err != nil {
+			log.Fatal(fmt.Errorf("[error] unable to open the \"TASKS\" file: %s", err.Error()))
+		}
+		defer tasks.Close()
+
+		scanner := bufio.NewScanner(tasks)
+		count := 1
+		for scanner.Scan() {
+			task := scanner.Text()
+			taskIssue, err := r.FindOrCreateIssue(fmt.Sprintf("%d. %s", count, task), i.ID, v.ID, project.ID)
+			fmt.Printf("[ok] #%d: %d. %s\n", taskIssue.ID, count, task)
+			count++
+			if err != nil {
+				log.Fatal(fmt.Errorf("Error reading from file: %s", err))
+			}
+		}
+
+		// Create the next release in Redmine
+		version, err := semver.NewVersion(newReleaseVersion)
+		if err != nil {
+			log.Fatalf("Error parsing version: %s", err)
+		}
+		nextVersion := version.IncPatch()
+
+		var release *redmine.Release
+
+		release, err = r.FindReleaseByName(project.Name, "Arvados "+nextVersion.String())
+		if err != nil {
+			log.Fatalf("Error finding release with name %s in project with name %s: %s", release.Name, project.Name, err)
+		}
+		if release == nil {
+			// No release found, create it
+			release = &redmine.Release{}
+			release.Name = "Arvados " + nextVersion.String()
+			release.Sharing = "hierarchy"
+			release.ReleaseStartDate = time.Now().AddDate(0, 0, 7*1).Format("2006-01-02") // arbitrary choice, 1 week from today
+			release.ReleaseEndDate = time.Now().AddDate(0, 0, 7*5).Format("2006-01-02")   // also arbitrary, 5 weeks from today
+			release.ProjectID = project.ID
+			release.Status = "open"
+			// Populate Project
+			tmp, err := r.GetProject(release.ProjectID)
+			if err != nil {
+				log.Fatalf("Unable to find project with ID %d: %s", release.ProjectID, err)
+			}
+			release.Project = &redmine.IDName{ID: release.ProjectID, Name: tmp.Name}
+
+			release, err = r.CreateRelease(*release)
+			if err != nil {
+				log.Fatalf("Unable to create release: %s", err)
+			}
+		}
+		fmt.Printf("[ok] the redmine release object for the next release is '%s' (%s/rb/release/%d)\n", release.Name, conf.Endpoint, release.ID)
+	},
+}
+
+var releasesCmd = &cobra.Command{
+	Use:   "releases",
+	Short: "Manage Redmine releases",
+	Long: "Manage Redmine releases.\n" +
+		"\nThe REDMINE_ENDPOINT environment variable must be set to the base URL of your redmine server." +
+		"\nThe REDMINE_APIKEY environment variable must be set to your redmine API key.",
+}
+
+var getReleaseCmd = &cobra.Command{
+	Use:   "get",
+	Short: "get a release",
+	Long: "Get a release.\n" +
+		"\nThe REDMINE_ENDPOINT environment variable must be set to the base URL of your redmine server." +
+		"\nThe REDMINE_APIKEY environment variable must be set to your redmine API key.",
+	Run: func(cmd *cobra.Command, args []string) {
+		releaseID, err := cmd.Flags().GetInt("release")
+		if err != nil {
+			fmt.Printf("Error converting Redmine release ID to integer: %s", err)
+			os.Exit(1)
+		}
+
+		r := redmine.NewClient(conf.Endpoint, conf.Apikey)
+
+		release, err := r.GetRelease(releaseID)
+		if err != nil {
+			log.Fatalf("Error finding release with id %d: %s", releaseID, err)
+		}
+		releaseStr, err := json.MarshalIndent(release, "", "  ")
+		if err != nil {
+			log.Fatalf("Error decoding release with id %d: %s", releaseID, err)
+		}
+		fmt.Println(string(releaseStr))
+
 	},
 }

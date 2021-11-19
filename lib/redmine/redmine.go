@@ -50,6 +50,20 @@ func (c *Client) Get(url string) (*http.Response, error) {
 	return res, err
 }
 
+func (c *Client) Post(url string, payload string) (*http.Response, error) {
+	req, err := http.NewRequest("POST", c.endpoint+url, strings.NewReader(payload))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("X-Redmine-API-Key", c.apikey)
+	res, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	return res, err
+}
+
 func (c *Client) Put(url string, payload string) (*http.Response, error) {
 	req, err := http.NewRequest("PUT", c.endpoint+url, strings.NewReader(payload))
 	if err != nil {

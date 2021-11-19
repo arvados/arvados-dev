@@ -118,14 +118,14 @@ func (c *Client) CreateIssue(issue Issue) (*Issue, error) {
 	if err != nil {
 		return nil, err
 	}
-	res, err := c.Put("/issues.json", string(s))
+	res, err := c.Post("/issues.json", string(s))
 	if err != nil {
 		return nil, err
 	}
 	defer res.Body.Close()
 
 	var r issueWrapper
-	err = responseHelper(res, &r, 200)
+	err = responseHelper(res, &r, 201)
 	if err != nil {
 		return nil, err
 	}
@@ -198,10 +198,13 @@ func (c *Client) FindOrCreateIssue(subject string, parentID int, versionID int, 
 	issue.FixedVersionID = versionID
 	issue.Subject = subject
 	if parentID != 0 {
-		issue.Parent = &ID{ID: parentID}
+		issue.ParentIssueID = parentID
 	}
 
 	i, err := c.CreateIssue(issue)
+	if err != nil {
+		return Issue{}, err
+	}
 	return *i, err
 }
 
