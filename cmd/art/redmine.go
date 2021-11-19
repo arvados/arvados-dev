@@ -6,6 +6,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -28,6 +29,7 @@ import (
 func init() {
 	rootCmd.AddCommand(redmineCmd)
 	redmineCmd.AddCommand(issuesCmd)
+	redmineCmd.AddCommand(releasesCmd)
 
 	associateIssueCmd.Flags().IntP("release", "r", 0, "Redmine release ID")
 	err := associateIssueCmd.MarkFlagRequired("release")
@@ -70,12 +72,19 @@ func init() {
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
-	createReleaseIssueCmd.Flags().IntP("project", "p", 0, "Redmine project ID")
+	createReleaseIssueCmd.Flags().StringP("project", "p", "", "Redmine project name")
 	err = createReleaseIssueCmd.MarkFlagRequired("project")
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 	issuesCmd.AddCommand(createReleaseIssueCmd)
+
+	getReleaseCmd.Flags().IntP("release", "r", 0, "ID of the redmine release")
+	err = getReleaseCmd.MarkFlagRequired("release")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	releasesCmd.AddCommand(getReleaseCmd)
 }
 
 var redmineCmd = &cobra.Command{
@@ -359,18 +368,18 @@ var createReleaseIssueCmd = &cobra.Command{
 			log.Fatal(fmt.Errorf("[error] can not convert Redmine sprint (version) ID to integer: %s", err))
 			return
 		}
-		projectID, err := cmd.Flags().GetInt("project")
+		projectName, err := cmd.Flags().GetString("project")
 		if err != nil {
-			log.Fatal(fmt.Errorf("[error] can not convert Redmine project ID to integer: %s", err))
+			log.Fatal(fmt.Errorf("[error] can not get Redmine project name: %s", err))
 			return
 		}
 
 		r := redmine.NewClient(conf.Endpoint, conf.Apikey)
 
 		// Does this project exist?
-		project, err := r.GetProject(projectID)
+		project, err := r.GetProjectByName(projectName)
 		if err != nil {
-			log.Fatalf("[error] can not find project with id %d: %s", projectID, err)
+			log.Fatalf("[error] can not find project with name %s: %s", projectName, err)
 		}
 
 		// Is the sprint (aka "version" in redmine) in the correct state?
@@ -382,7 +391,7 @@ var createReleaseIssueCmd = &cobra.Command{
 			log.Fatal(fmt.Errorf("[error] the sprint must be open; the status of the sprint with id %d is '%s'", v.ID, v.Status))
 		}
 
-		i, err := r.FindOrCreateIssue("Release Arvados "+newReleaseVersion, 0, v.ID, projectID)
+		i, err := r.FindOrCreateIssue("Release Arvados "+newReleaseVersion, 0, v.ID, project.ID)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -400,10 +409,10 @@ var createReleaseIssueCmd = &cobra.Command{
 		defer tasks.Close()
 
 		scanner := bufio.NewScanner(tasks)
-		count := 0
+		count := 1
 		for scanner.Scan() {
 			task := scanner.Text()
-			taskIssue, err := r.FindOrCreateIssue(fmt.Sprintf("%d. %s", count, task), i.ID, v.ID, projectID)
+			taskIssue, err := r.FindOrCreateIssue(fmt.Sprintf("%d. %s", count, task), i.ID, v.ID, project.ID)
 			fmt.Printf("[ok] #%d: %d. %s\n", taskIssue.ID, count, task)
 			count++
 			if err != nil {
@@ -431,7 +440,7 @@ var createReleaseIssueCmd = &cobra.Command{
 			release.Sharing = "hierarchy"
 			release.ReleaseStartDate = time.Now().AddDate(0, 0, 7*1).Format("2006-01-02") // arbitrary choice, 1 week from today
 			release.ReleaseEndDate = time.Now().AddDate(0, 0, 7*5).Format("2006-01-02")   // also arbitrary, 5 weeks from today
-			release.ProjectID = projectID
+			release.ProjectID = project.ID
 			release.Status = "open"
 			// Populate Project
 			tmp, err := r.GetProject(release.ProjectID)
@@ -440,12 +449,47 @@ var createReleaseIssueCmd = &cobra.Command{
 			}
 			release.Project = &redmine.IDName{ID: release.ProjectID, Name: tmp.Name}
 
-			tmpRelease, err := r.CreateRelease(*release)
+			release, err = r.CreateRelease(*release)
 			if err != nil {
 				log.Fatalf("Unable to create release: %s", err)
 			}
-			release = tmpRelease
 		}
 		fmt.Printf("[ok] the redmine release object for the next release is '%s' (%s/rb/release/%d)\n", release.Name, conf.Endpoint, release.ID)
+	},
+}
+
+var releasesCmd = &cobra.Command{
+	Use:   "releases",
+	Short: "Manage Redmine releases",
+	Long: "Manage Redmine releases.\n" +
+		"\nThe REDMINE_ENDPOINT environment variable must be set to the base URL of your redmine server." +
+		"\nThe REDMINE_APIKEY environment variable must be set to your redmine API key.",
+}
+
+var getReleaseCmd = &cobra.Command{
+	Use:   "get",
+	Short: "get a release",
+	Long: "Get a release.\n" +
+		"\nThe REDMINE_ENDPOINT environment variable must be set to the base URL of your redmine server." +
+		"\nThe REDMINE_APIKEY environment variable must be set to your redmine API key.",
+	Run: func(cmd *cobra.Command, args []string) {
+		releaseID, err := cmd.Flags().GetInt("release")
+		if err != nil {
+			fmt.Printf("Error converting Redmine release ID to integer: %s", err)
+			os.Exit(1)
+		}
+
+		r := redmine.NewClient(conf.Endpoint, conf.Apikey)
+
+		release, err := r.GetRelease(releaseID)
+		if err != nil {
+			log.Fatalf("Error finding release with id %d: %s", releaseID, err)
+		}
+		releaseStr, err := json.MarshalIndent(release, "", "  ")
+		if err != nil {
+			log.Fatalf("Error decoding release with id %d: %s", releaseID, err)
+		}
+		fmt.Println(string(releaseStr))
+
 	},
 }

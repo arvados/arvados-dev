@@ -42,3 +42,18 @@ func (c *Client) GetProject(id int) (*Project, error) {
 	}
 	return &r.Project, nil
 }
+
+func (c *Client) GetProjectByName(name string) (*Project, error) {
+	res, err := c.Get("/projects/" + name + ".json")
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	var r projectWrapper
+	err = responseHelper(res, &r, 200)
+	if err != nil {
+		return nil, err
+	}
+	return &r.Project, nil
+}
