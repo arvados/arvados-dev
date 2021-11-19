@@ -81,19 +81,19 @@ aptly repo show $DISTRO-attic
 
 
 # Publish dev
-aptly publish repo -architectures "amd64, arm64" $DISTRO-dev filesystem:$DISTRO:.
+aptly publish repo -architectures "amd64,arm64" $DISTRO-dev filesystem:$DISTRO:.
 aptly publish show $DISTRO-dev filesystem:$DISTRO:.
 
 # Publish testing
-aptly publish repo -architectures "amd64, arm64" $DISTRO-testing filesystem:$DISTRO:.
+aptly publish repo -architectures "amd64,arm64" $DISTRO-testing filesystem:$DISTRO:.
 aptly publish show $DISTRO-testing filesystem:$DISTRO:.
 
 # Publish release
-aptly publish repo -architectures "amd64, arm64" $DISTRO filesystem:$DISTRO:.
+aptly publish repo -architectures "amd64,arm64" $DISTRO filesystem:$DISTRO:.
 aptly publish show $DISTRO filesystem:$DISTRO:.
 
 # Publish attic
-aptly publish repo -architectures "amd64, arm64" $DISTRO-attic filesystem:$DISTRO:.
+aptly publish repo -architectures "amd64,arm64" $DISTRO-attic filesystem:$DISTRO:.
 aptly publish show $DISTRO-attic filesystem:$DISTRO:.
 
 # Show all the published repos
