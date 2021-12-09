@@ -9,7 +9,7 @@ Review release notes
 Build RC packages
 Build RC arvados/jobs image
 Test installer
-Deploy RC packages to playground
+Build compute image & deploy RC packages to playground
 Run bam-to-vcf pipeline pipeline
 Approve RC for release
 Build final release packages
