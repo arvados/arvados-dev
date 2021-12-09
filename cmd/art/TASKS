@@ -1,5 +1,5 @@
-Prepare release branch
-Update the "Upgrading Arvados and Release notes" doc page (main and release branch)
+Prepare release branches
+Update provision.sh, formula and arvbox to point to release.  Update the "Upgrading Arvados and Release notes" doc page (main and release branch).
 Ensure that the entire automated testing pipeline is passing on Jenkins
 Manual testing
 Review release branch
@@ -7,14 +7,17 @@ Create next redmine release
 Draft release notes and publish them to www-dev
 Review release notes
 Build RC packages
+Build RC arvados/jobs image
 Test installer
 Deploy RC packages to playground
 Run bam-to-vcf pipeline pipeline
 Approve RC for release
 Build final release packages
 Push packages to stable
-Publish docker image, python and ruby packages
-Publish formula/installer for release
+Publish arvados/jobs Docker image
+Publish Python and Ruby packages
+Publish Java package
+Publish R package
 Publish arvados/arvbox-demo image
 Tag commits
 Update doc site
