@@ -5,10 +5,8 @@
 package redmine
 
 import (
-	//	"encoding/json"
 	"errors"
 	"strconv"
-	//	"strings"
 )
 
 type versionWrapper struct {
@@ -47,20 +45,19 @@ func (c *Client) Version(id int) (*Version, error) {
 		return nil, err
 	}
 	return &r.Version, nil
-	/*
-		decoder := json.NewDecoder(res.Body)
-		var r versionWrapper
-		if res.StatusCode != 200 {
-			var er errorsResult
-			err = decoder.Decode(&er)
-			if err == nil {
-				err = errors.New(strings.Join(er.Errors, "\n"))
-			}
-		} else {
-			err = decoder.Decode(&r)
-		}
-		if err != nil {
-			return nil, err
-		} */
-	return &r.Version, nil
+}
+
+func (c *Client) Versions(projectId int) ([]Version, error) {
+	res, err := c.Get("/projects/" + strconv.Itoa(projectId) + "/versions.json")
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	var r versionsResult
+	err = responseHelper(res, &r, 200)
+	if err != nil {
+		return nil, err
+	}
+	return r.Versions, nil
 }
