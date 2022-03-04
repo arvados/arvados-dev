@@ -1,0 +1,49 @@
+To: {{ .Developer}}
+Subject: {{ .Subject }}
+
+
+==============================================================================
+Developer:  {{ .Developer }}
+Sprint:     {{ .SprintName }}
+            {{ .SprintURL }}
+Start date: {{ .SprintStartDate }}
+Due date:   {{ .SprintDueDate }}
+==============================================================================
+{{ if .ReviewTasksInProgress -}}
+Your review tasks that are in progress:
+{{ range .ReviewTasksInProgress -}}
+------------------------------------------------------------------------------
+  Issue:  {{ .IssueID }} {{ .IssueSubject }}
+          {{ .IssueURL }}
+  Review: {{ .ID }} {{ .Subject }}
+          {{ .URL }}
+{{ end -}}
+{{ else -}}
+No review tasks waiting!
+{{ end -}}
+{{ if .UnassignedReviewTasks -}}
+==============================================================================
+Unassigned review tasks (please take these):
+{{ range .UnassignedReviewTasks -}}
+------------------------------------------------------------------------------
+  Issue:  {{ .IssueID }} {{ .IssueSubject }}
+          {{ .IssueURL }}
+  Review: {{ .ID }} {{ .Subject }}
+          {{ .URL }}
+{{ end -}}
+
+{{ end -}}
+{{ if .NewReviewTasks -}}
+==============================================================================
+Your future review tasks (not ready for your attention yet):
+{{ range .NewReviewTasks -}}
+------------------------------------------------------------------------------
+  Issue:  {{ .IssueID }} {{ .IssueSubject }}
+          {{ .IssueURL }}
+  Review: {{ .ID }} {{ .Subject }}
+          {{ .URL }}
+{{ end -}}
+{{ else -}}
+No future review tasks on this sprint!
+{{ end -}}
+==============================================================================

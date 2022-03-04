@@ -7,3 +7,5 @@ jenkins/packer-images/1078ECD7.asc
 go.mod
 go.sum
 cmd/art/TASKS
+cmd/review-task-reminder/.gitignore
+cmd/review-task-reminder/emailTemplate.txt

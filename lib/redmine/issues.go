@@ -51,6 +51,7 @@ type IssueFilter struct {
 	StatusID  string
 	Subject   string
 	ParentID  string
+	VersionID string
 }
 
 type issuesResult struct {
@@ -83,6 +84,9 @@ func issueFilters(issueFilter *IssueFilter) []string {
 	}
 	if len(issueFilter.Subject) > 0 {
 		filterParameters = append(filterParameters, fmt.Sprintf("subject=~%v", issueFilter.Subject))
+	}
+	if len(issueFilter.VersionID) > 0 {
+		filterParameters = append(filterParameters, fmt.Sprintf("fixed_version=~%v", issueFilter.VersionID))
 	}
 
 	if len(filterParameters) > 0 {
