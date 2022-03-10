@@ -3,7 +3,7 @@ module git.arvados.org/arvados-dev.git/cmd/review-task-reminder
 go 1.17
 
 require (
-	git.arvados.org/arvados-dev.git v0.0.0-20211209165122-499de095cae2
+	git.arvados.org/arvados-dev.git v0.0.0-20220310181126-b6fdd9810edd
 	github.com/sirupsen/logrus v1.4.2
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/viper v1.10.1

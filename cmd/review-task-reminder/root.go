@@ -197,9 +197,12 @@ https://git.arvados.org/arvados-dev.git/cmd/review-task-reminder` +
 			if err != nil {
 				log.Fatalf(err.Error())
 			}
+
+			log.Debugf("Retrieved %d issues", len(issues))
 			reviewTasksByDeveloper := make(map[int][]ReviewTask)
 			var UnassignedReviewTasks []ReviewTask
 			for _, i := range issues {
+				log.Debugf("Considering issue (%s): %+#v, \"%s\"", i.Tracker.Name, i.ID, i.Subject)
 				// Filter for tasks
 				if i.Tracker.Name != "Task" {
 					continue
