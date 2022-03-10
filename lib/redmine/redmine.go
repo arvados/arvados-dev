@@ -95,5 +95,6 @@ func responseHelper(res *http.Response, r interface{}, okCode int) error {
 		// When r is nil, the API call is not expected to return a result (empty res.Body)
 		err = decoder.Decode(&r)
 	}
+	//fmt.Printf("***\nRAW RESPONSE: %+v\n***\n", r)
 	return err
 }

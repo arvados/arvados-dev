@@ -86,32 +86,43 @@ func issueFilters(issueFilter *IssueFilter) []string {
 		filterParameters = append(filterParameters, fmt.Sprintf("subject=~%v", issueFilter.Subject))
 	}
 	if len(issueFilter.VersionID) > 0 {
-		filterParameters = append(filterParameters, fmt.Sprintf("fixed_version=~%v", issueFilter.VersionID))
-	}
-
-	if len(filterParameters) > 0 {
-		return filterParameters[1:]
+		filterParameters = append(filterParameters, fmt.Sprintf("fixed_version_id=%v", issueFilter.VersionID))
 	}
 
 	return filterParameters
 }
 
 // FilteredIssues returns a slice of issues that matches the f criteria
+// This function handles pagination internally, so it could return a lot
+// of results at once.
 func (c *Client) FilteredIssues(f *IssueFilter) ([]Issue, error) {
 	s := issueFilters(f)
 
-	res, err := c.Get("/issues.json?" + strings.Join(s, "&"))
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
+	var issues []Issue
+	var offset int
+	// Get 100 results at once (the default is 25)
+	limit := 100
+	for {
+		parameters := append(s, fmt.Sprintf("offset=%d", offset), fmt.Sprintf("limit=%d", limit))
+		res, err := c.Get("/issues.json?" + strings.Join(parameters, "&"))
+		if err != nil {
+			return nil, err
+		}
+		defer res.Body.Close()
 
-	var r issuesResult
-	err = responseHelper(res, &r, 200)
-	if err != nil {
-		return nil, err
+		var r issuesResult
+		err = responseHelper(res, &r, 200)
+		if err != nil {
+			return nil, err
+		}
+		issues = append(issues, r.Issues...)
+		if r.Offset+uint(len(r.Issues)) >= r.TotalCount {
+			break
+		}
+		offset += limit
 	}
-	return r.Issues, nil
+
+	return issues, nil
 }
 
 // CreateIssue creates a redmine issue
