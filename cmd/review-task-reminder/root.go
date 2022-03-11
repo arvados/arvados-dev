@@ -208,7 +208,7 @@ https://git.arvados.org/arvados-dev.git/cmd/review-task-reminder` +
 					continue
 				}
 				// Filter for review tasks (issue subject must start with 'review')
-				reviewRE := regexp.MustCompile(`^review`)
+				reviewRE := regexp.MustCompile(`^(Review|review)`)
 				if !reviewRE.MatchString(i.Subject) {
 					continue
 				}
