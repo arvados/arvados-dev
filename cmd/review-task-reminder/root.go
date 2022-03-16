@@ -153,6 +153,7 @@ https://git.arvados.org/arvados-dev.git/cmd/review-task-reminder` +
 		if err != nil {
 			log.Fatalf(err.Error())
 		}
+		now := time.Date(time.Now().Year(), time.Now().Month(), time.Now().Day(), 0, 0, 0, 0, time.UTC)
 		// Find any current sprint(s)
 		for _, v := range versions {
 			// It must be "open"
@@ -167,7 +168,7 @@ https://git.arvados.org/arvados-dev.git/cmd/review-task-reminder` +
 			if err != nil {
 				log.Fatalf(err.Error())
 			}
-			if time.Now().After(dueDate) {
+			if dueDate.Before(now) {
 				continue
 			}
 			// The start date must be in the past (have to look up the Sprint object!)
@@ -183,7 +184,7 @@ https://git.arvados.org/arvados-dev.git/cmd/review-task-reminder` +
 			if err != nil {
 				log.Fatalf(err.Error())
 			}
-			if time.Now().Before(startDate) {
+			if startDate.After(now) {
 				continue
 			}
 			// Found a current sprint
