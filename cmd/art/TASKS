@@ -24,3 +24,4 @@ Update doc site
 Merge release notes (step 6) form "develop" to "main" and publish release on arvados.org
 Send out release notification
 Major releases only: Copy "run-tests" jobs in jenkins
+Add the release to zenodo.org
