@@ -13,8 +13,8 @@ Build compute image & deploy RC packages to playground
 Run bam-to-vcf pipeline pipeline
 Approve RC for release
 Build final release packages
+Publish stable arvados/jobs Docker image
 Push packages to stable
-Publish arvados/jobs Docker image
 Publish Python and Ruby packages
 Publish Java package
 Publish R package
