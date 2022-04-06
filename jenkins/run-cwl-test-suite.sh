@@ -111,5 +111,5 @@ fi
 cd cwl-v1.2
 git fetch -t
 git checkout v1.2.0
-exec cwltest  -Sdocker_entrypoint -Stimelimit_invalid_wf -N307 \
+exec cwltest  -Sdocker_entrypoint,timelimit_invalid_wf -N307 \
      -j$JOBS --timeout=900 --tool arvados-cwl-runner --test conformance_tests.yaml -- --compute-checksum --disable-reuse --eval-timeout 60
