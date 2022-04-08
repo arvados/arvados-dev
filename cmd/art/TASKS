@@ -8,9 +8,9 @@ Draft release notes and publish them to www-dev
 Review release notes
 Build RC packages
 Build RC arvados/jobs image
-Test installer
+Ensure installer tests are passing
 Build compute image & deploy RC packages to playground
-Run bam-to-vcf pipeline pipeline
+Run bam-to-vcf demo pipeline
 Approve RC for release
 Build final release packages
 Publish stable arvados/jobs Docker image
@@ -20,8 +20,8 @@ Publish Java package
 Publish R package
 Publish arvados/arvbox-demo image
 Tag commits
-Update doc site
-Merge release notes (step 6) form "develop" to "main" and publish release on arvados.org
-Send out release notification
+Ensure doc.arvados.org has new version
+Merge release notes (step 7) from "develop" to "main" on arvados.org
+Send out release announcements
 Major releases only: Copy "run-tests" jobs in jenkins
 Add the release to zenodo.org
