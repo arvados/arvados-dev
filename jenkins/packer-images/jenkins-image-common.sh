@@ -42,7 +42,7 @@ sudo su -c "${POSTINSTALL_CMD}"
 # create a reference repository (bare git repo)
 # jenkins will use this to speed up the checkout for each job
 cd /usr/src
-sudo git clone --mirror https://git.arvados.org/arvados.git
+sudo git clone --mirror git://git.arvados.org/arvados.git
 sudo chown jenkins:jenkins arvados.git -R
 
 # Jenkins will use this script to determine when the node is ready for use

@@ -9,18 +9,21 @@ set -eo pipefail
 # Install the dependencies for arvados-server
 sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get install -y libpam0g-dev wget build-essential"
 
-# Get Go 1.16.3
-cd /usr/src
-sudo wget https://golang.org/dl/go1.16.3.linux-amd64.tar.gz
-sudo tar xzf go1.16.3.linux-amd64.tar.gz
-sudo ln -s /usr/src/go/bin/go /usr/local/bin/go-1.16.3
-sudo ln -s /usr/src/go/bin/gofmt /usr/local/bin/gofmt-1.16.3
-sudo ln -s /usr/local/bin/go-1.16.3 /usr/local/bin/go
-sudo ln -s /usr/local/bin/gofmt-1.16.3 /usr/local/bin/gofmt
-
 # Check out a local copy of the arvados repo so we can use it to install the dependencies
 cd /usr/src
 sudo git clone arvados.git
+
+# Install the correct version of Go
+GO_VERSION=`grep 'const goversion =' /usr/src/arvados/lib/install/deps.go |awk -F'"' '{print $2}'`
+cd /usr/src
+sudo wget https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz
+sudo tar xzf go${GO_VERSION}.linux-amd64.tar.gz
+sudo ln -s /usr/src/go/bin/go /usr/local/bin/go-${GO_VERSION}
+sudo ln -s /usr/src/go/bin/gofmt /usr/local/bin/gofmt-${GO_VERSION}
+sudo ln -s /usr/local/bin/go-${GO_VERSION} /usr/local/bin/go
+sudo ln -s /usr/local/bin/gofmt-${GO_VERSION} /usr/local/bin/gofmt
+
+# Preseed our dependencies
 cd arvados
 sudo go mod download
 sudo go run ./cmd/arvados-server install -type test
