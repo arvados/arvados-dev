@@ -17,6 +17,11 @@ $oldrev  = ARGV[1]
 $newrev  = ARGV[2]
 $user    = ENV['USER']
 
+if ENV.has_key?('GL_OPTION_SKIP_DCO_CHECK')
+  puts "Skipping DCO check..."
+  exit 0
+end
+
 puts "Enforcing DCO signoff..."
 puts "(#{$refname}) (#{$oldrev[0,6]}) (#{$newrev[0,6]})"
 

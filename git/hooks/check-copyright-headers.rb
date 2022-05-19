@@ -17,6 +17,11 @@ $oldrev  = ARGV[1]
 $newrev  = ARGV[2]
 $user    = ENV['USER']
 
+if ENV.has_key?('GL_OPTION_SKIP_COPYRIGHT_HEADER_CHECK')
+  puts "Skipping copyright header check..."
+  exit 0
+end
+
 puts "Enforcing copyright headers..."
 puts "(#{$refname}) (#{$oldrev[0,6]}) (#{$newrev[0,6]})"
 

@@ -17,6 +17,11 @@ $oldrev  = ARGV[1]
 $newrev  = ARGV[2]
 $user    = ENV['USER']
 
+if ENV.has_key?('GL_OPTION_SKIP_CODING_STANDARDS_CHECK')
+  puts "Skipping coding standards check..."
+  exit 0
+end
+
 def blacklist bl
   if ($newrev[0,6] ==  '000000')
     # A branch is being deleted. Do not check old commits for DCO signoff!
