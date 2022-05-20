@@ -9,6 +9,10 @@ set -eo pipefail
 # Install the dependencies for arvados-server
 sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get install -y libpam0g-dev wget build-essential"
 
+# Install the dependencies for the package building/testing jobs
+sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io make wget dpkg-dev createrepo unzip"
+sudo usermod -a -G docker jenkins
+
 # Check out a local copy of the arvados repo so we can use it to install the dependencies
 cd /usr/src
 sudo git clone arvados.git
@@ -37,3 +41,9 @@ mkdir /home/jenkins/tmp
 sudo chown jenkins:jenkins /home/jenkins -R
 sudo chown jenkins:jenkins /usr/src/arvados -R
 sudo -u jenkins ./build/run-tests.sh WORKSPACE=/usr/src/arvados --temp /home/jenkins/tmp --only install
+
+# Install the arvados-dev repo where the jenkins `test-provision-multinode` job
+# expects it
+cd /usr/local
+sudo git clone --depth 1 https://github.com/arvados/arvados-dev
+sudo chown -R jenkins:jenkins /usr/local/arvados-dev/
