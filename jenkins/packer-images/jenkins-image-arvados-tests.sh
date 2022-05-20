@@ -13,10 +13,6 @@ sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get install -y libpam0g-dev wget 
 sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io make wget dpkg-dev createrepo unzip"
 sudo usermod -a -G docker jenkins
 
-# FUSE must be configured with the 'user_allow_other' option enabled for Crunch to set up Keep mounts that are readable by containers.
-# This is used in our test suite.
-echo user_allow_other | sudo tee -a /etc/fuse.conf
-
 # Check out a local copy of the arvados repo so we can use it to install the dependencies
 cd /usr/src
 sudo git clone arvados.git
@@ -35,6 +31,10 @@ sudo ln -s /usr/local/bin/gofmt-${GO_VERSION} /usr/local/bin/gofmt
 cd arvados
 sudo go mod download
 sudo go run ./cmd/arvados-server install -type test
+
+# FUSE must be configured with the 'user_allow_other' option enabled for Crunch to set up Keep mounts that are readable by containers.
+# This is used in our test suite.
+echo user_allow_other | sudo tee -a /etc/fuse.conf
 
 # Our Jenkins jobs use this directory to store the temporary files for the tests
 mkdir /home/jenkins/tmp
