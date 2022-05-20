@@ -9,9 +9,13 @@ set -eo pipefail
 # Install the dependencies for arvados-server
 sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get install -y libpam0g-dev wget build-essential"
 
-# Install the dependencies for the package building/testing jobs
+# Install docker (used in our tests and also for package building/testing)
 sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io make wget dpkg-dev createrepo unzip"
 sudo usermod -a -G docker jenkins
+
+# FUSE must be configured with the 'user_allow_other' option enabled for Crunch to set up Keep mounts that are readable by containers.
+# This is used in our test suite.
+echo user_allow_other | sudo tee -a /etc/fuse.conf
 
 # Check out a local copy of the arvados repo so we can use it to install the dependencies
 cd /usr/src
