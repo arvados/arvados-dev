@@ -268,6 +268,7 @@ PACKAGE_SUITES = {
                             'sdk/python/dist/*.tar.gz',
                             'sdk/cwl/dist/*.tar.gz',
                             'services/fuse/dist/*.tar.gz',
+                            'tools/crunchstat-summary/dist/*.tar.gz',
                         ),
     'gems': _define_suite(GemPackageSuite,
                           'sdk/ruby/*.gem',
