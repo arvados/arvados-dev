@@ -1,5 +1,5 @@
 Prepare release branches
-Update provision.sh, formula and arvbox to point to release.  Update the "Upgrading Arvados and Release notes" doc page (main and release branch).
+Update the "Upgrading Arvados and Release notes" doc page (main and release branch)
 Ensure that the entire automated testing pipeline is passing on Jenkins
 Manual testing
 Review release branch
@@ -19,6 +19,7 @@ Publish Python and Ruby packages
 Publish Java package
 Publish R package
 Publish arvados/arvbox-demo image
+Update provision.sh, formula and arvbox to point to release
 Tag commits
 Ensure doc.arvados.org has new version
 Merge release notes (step 7) from "develop" to "main" on arvados.org
