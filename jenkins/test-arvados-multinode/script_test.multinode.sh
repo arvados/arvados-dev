@@ -66,7 +66,8 @@ sed "s#cluster_fixme_or_this_wont_work#${CLUSTER_NAME}#g;
      s/# VERSION=.*$/VERSION=\"${VERSION}\"/g" \
      local.params.example.multiple_hosts > ${GIT_COMMIT}/debian11-local.params.example.multiple_hosts
 
-cp -vr /usr/local/arvados-dev/jenkins/test-arvados-multinode/certs tests provision.sh ${GIT_COMMIT}
+cp -vr tests provision.sh ${GIT_COMMIT}
+cp -vr /usr/local/arvados-dev/jenkins/test-arvados-multinode/certs/* ${GIT_COMMIT}/local_config_dir/certs/
 
 echo "== Setting up NODE_A with database,api,controller,keepstore,websocket,workbench2,keepbalance,keepproxy,workbench,dispatcher"
 
