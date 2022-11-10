@@ -15,7 +15,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/arvados/arvados-dev/compute-image-cleaner/config"
+	"git.arvados.org/arvados-dev.git/compute-image-cleaner/config"
 
 	"github.com/Azure/azure-pipeline-go/pipeline"
 	"github.com/Azure/azure-storage-blob-go/azblob"

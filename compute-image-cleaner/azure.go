@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/arvados/arvados-dev/compute-image-cleaner/config"
+	"git.arvados.org/arvados-dev.git/compute-image-cleaner/config"
 
 	"github.com/Azure/azure-sdk-for-go/services/storage/mgmt/2017-06-01/storage"
 
