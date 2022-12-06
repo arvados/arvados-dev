@@ -63,7 +63,8 @@ sed "s#cluster_fixme_or_this_wont_work#${CLUSTER_NAME}#g;
      s#RELEASE=\"production\"#RELEASE=\"${RELEASE}\"#g;
      s#SSL_MODE=\"lets-encrypt\"#SSL_MODE=\"bring-your-own\"#g;
      s/# BRANCH=\"main\"/BRANCH=${ARVADOS_FORMULA_BRANCH}/g;
-     s/# VERSION=.*$/VERSION=\"${VERSION}\"/g" \
+     s/# VERSION=.*$/VERSION=\"${VERSION}\"/g;
+     s#fixme#fixed#g" \
      local.params.example.multiple_hosts > ${GIT_COMMIT}/debian11-local.params.example.multiple_hosts
 
 cp -vr tests provision.sh ${GIT_COMMIT}
