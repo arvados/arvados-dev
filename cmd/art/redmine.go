@@ -60,6 +60,11 @@ func init() {
 	}
 	findAndAssociateIssuesCmd.Flags().BoolP("auto-set", "a", false, "Associate issues without existing release without prompting")
 	findAndAssociateIssuesCmd.Flags().BoolP("skip-release-change", "s", false, "Skip issues already assigned to another release (do not prompt)")
+	findAndAssociateIssuesCmd.Flags().StringP("source-repo", "", "https://github.com/arvados/arvados.git", "Source repository to clone from")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+
 	issuesCmd.AddCommand(findAndAssociateIssuesCmd)
 
 	createReleaseIssueCmd.Flags().StringP("new-release-version", "n", "", "Semantic version number of the new release")
@@ -172,6 +177,13 @@ func checkError(err error) {
 	}
 }
 
+func checkError2(msg string, err error) {
+	if err != nil {
+		fmt.Printf("%s: %s\n", msg, err.Error())
+		os.Exit(1)
+	}
+}
+
 var findAndAssociateIssuesCmd = &cobra.Command{
 	Use:   "find-and-associate",
 	Short: "Find all issue numbers to associate with a release, and associate them",
@@ -206,6 +218,11 @@ var findAndAssociateIssuesCmd = &cobra.Command{
 			log.Fatal(fmt.Errorf("Error getting skip-release-change value: %s", err))
 			return
 		}
+		arvRepo, err := cmd.Flags().GetString("source-repo")
+		if err != nil {
+			log.Fatal(fmt.Errorf("Error getting source-repo value: %s", err))
+			return
+		}
 
 		if len(previousReleaseTag) < 5 || len(previousReleaseTag) > 8 {
 			log.Fatal(fmt.Errorf("The previous-release-tag argument is of an unexpected format. Expecting a semantic version (e.g. 2.3.0)"))
@@ -217,15 +234,20 @@ var findAndAssociateIssuesCmd = &cobra.Command{
 		}
 
 		// Clone the repo in memory
-		fmt.Println("Cloning https://github.com/arvados/arvados.git")
+
+		// our own arvados repo won't clone,
+		//arvRepo := "https://git.arvados.org/arvados.git"
+		//arvRepo := "https://github.com/arvados/arvados.git"
+
+		fmt.Println("Cloning "+arvRepo)
 		repo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-			URL: "https://github.com/arvados/arvados.git",
+			URL: arvRepo,
 		})
 		checkError(err)
 		fmt.Println("... done")
 		fmt.Println()
 		start, err := repo.ResolveRevision(plumbing.Revision("refs/tags/" + previousReleaseTag))
-		checkError(err)
+		checkError2("repo.ResolveRevision", err)
 		fmt.Printf("previous-release-tag: %s (%s)\n", previousReleaseTag, start)
 		fmt.Printf("new-release-commit: %s\n", newReleaseCommitHash)
 		fmt.Println()
@@ -233,7 +255,7 @@ var findAndAssociateIssuesCmd = &cobra.Command{
 		// Build the exclusion list
 		seen := make(map[plumbing.Hash]bool)
 		excludeIter, err := repo.Log(&git.LogOptions{From: *start, Order: git.LogOrderCommitterTime})
-		checkError(err)
+		checkError2("repo.Log", err)
 		excludeIter.ForEach(func(c *object.Commit) error {
 			seen[c.Hash] = true
 			return nil
@@ -248,7 +270,7 @@ var findAndAssociateIssuesCmd = &cobra.Command{
 		}
 
 		headCommit, err := repo.CommitObject(plumbing.NewHash(newReleaseCommitHash))
-		checkError(err)
+		checkError2("repo.CommitObject", err)
 
 		iter := object.NewFilterCommitIter(headCommit, &isValid, nil)
 

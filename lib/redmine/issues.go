@@ -184,7 +184,7 @@ func (c *Client) UpdateIssue(issue Issue) error {
 		return fmt.Errorf("Issue with id %d not found", issue.ID)
 	}
 
-	return responseHelper(res, nil, 200)
+	return responseHelper(res, nil, 204)
 }
 
 // FindOrCreateIssue finds or creates an issue with a given subject, parentID, versionID and projectID
