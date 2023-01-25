@@ -43,6 +43,19 @@ func init() {
 	}
 	issuesCmd.AddCommand(associateIssueCmd)
 
+	associateOrphans.Flags().IntP("release", "r", 0, "Redmine release ID")
+	err = associateOrphans.MarkFlagRequired("release")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	associateOrphans.Flags().StringP("project", "p", "", "Redmine project name")
+	err = associateOrphans.MarkFlagRequired("project")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	associateOrphans.Flags().BoolP("dry-run", "", false, "Only report what will happen without making any change")
+	issuesCmd.AddCommand(associateOrphans)
+
 	findAndAssociateIssuesCmd.Flags().IntP("release", "r", 0, "Redmine release ID")
 	err = findAndAssociateIssuesCmd.MarkFlagRequired("release")
 	if err != nil {
@@ -121,6 +134,68 @@ var issuesCmd = &cobra.Command{
 	Long: "Manage Redmine issues.\n" +
 		"\nThe REDMINE_ENDPOINT environment variable must be set to the base URL of your redmine server." +
 		"\nThe REDMINE_APIKEY environment variable must be set to your redmine API key.",
+}
+
+var associateOrphans = &cobra.Command{
+	Use:   "associate-orphans", // FIXME
+	Short: "Find open issues without a release and version, assign them to the given release",
+	Long: "Find open issues without a release and version, assign them to the given release.\n" +
+		"\nThe REDMINE_ENDPOINT environment variable must be set to the base URL of your redmine server." +
+		"\nThe REDMINE_APIKEY environment variable must be set to your redmine API key.",
+	Run: func(cmd *cobra.Command, args []string) {
+		rID, err := cmd.Flags().GetInt("release")
+		if err != nil {
+			fmt.Printf("Error converting Redmine release ID to integer: %s", err)
+			os.Exit(1)
+		}
+		pName, err := cmd.Flags().GetString("project")
+		if err != nil {
+			log.Fatalf("Error getting the requested project name: %s", err)
+		}
+		dryRun, err := cmd.Flags().GetBool("dry-run")
+		if err != nil {
+			log.Fatalf("Error getting the dry-run parameter")
+		}
+
+		rm := redmine.NewClient(conf.Endpoint, conf.Apikey)
+		p, err := rm.GetProjectByName(pName)
+		if err != nil {
+			log.Fatalf("Error retrieving project ID for '%s': %s", pName, err)
+		}
+		r, err := rm.GetRelease(rID)
+		if err != nil {
+			log.Fatalf("Error retrieving release '%d': %s", rID, err)
+		}
+		flt := redmine.IssueFilter{
+			StatusID:  "open",
+			ProjectID: fmt.Sprintf("%d", p.ID),
+			// No values assigned on the following fields. It seems that using
+			// an empty string is interpreted as 'any value'. The documentation
+			// isn't clear, but after some trial & error, '!*' seems to do the trick.
+			// https://www.redmine.org/projects/redmine/wiki/Rest_Issues
+			ReleaseID: "!*",
+			VersionID: "!*",
+			ParentID:  "!*",
+		}
+		issues, err := rm.FilteredIssues(&flt)
+		if err != nil {
+			fmt.Printf("Error requesting unassigned open issues from project %d: %s", p.ID, err)
+		}
+		fmt.Printf("Found %d issues from project '%s' to assign to release '%s'...\n", len(issues), p.Name, r.Name)
+		for _, issue := range issues {
+			fmt.Printf("#%d - %s ", issue.ID, issue.Subject)
+			if !dryRun {
+				err = rm.SetRelease(issue, rID)
+				if err != nil {
+					fmt.Printf("[error]\n")
+					log.Fatalf("Error trying to assign issue %d to release %d: %s", issue.ID, rID, err)
+				}
+				fmt.Printf("[changed]\n")
+			} else {
+				fmt.Printf("[skipped]\n")
+			}
+		}
+	},
 }
 
 var associateIssueCmd = &cobra.Command{
@@ -239,7 +314,7 @@ var findAndAssociateIssuesCmd = &cobra.Command{
 		//arvRepo := "https://git.arvados.org/arvados.git"
 		//arvRepo := "https://github.com/arvados/arvados.git"
 
-		fmt.Println("Cloning "+arvRepo)
+		fmt.Println("Cloning " + arvRepo)
 		repo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 			URL: arvRepo,
 		})
