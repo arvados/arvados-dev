@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"sync"
 	"time"
 
 	"git.arvados.org/arvados-dev.git/lib/redmine"
@@ -182,18 +183,84 @@ var associateOrphans = &cobra.Command{
 			fmt.Printf("Error requesting unassigned open issues from project %d: %s", p.ID, err)
 		}
 		fmt.Printf("Found %d issues from project '%s' to assign to release '%s'...\n", len(issues), p.Name, r.Name)
-		for _, issue := range issues {
-			fmt.Printf("#%d - %s ", issue.ID, issue.Subject)
-			if !dryRun {
-				err = rm.SetRelease(issue, rID)
-				if err != nil {
-					fmt.Printf("[error]\n")
-					log.Fatalf("Error trying to assign issue %d to release %d: %s", issue.ID, rID, err)
+
+		type job struct {
+			issue  redmine.Issue
+			rID    int
+			dryRun bool
+		}
+		type result struct {
+			msg     string
+			success bool
+		}
+		var wg sync.WaitGroup
+		jobs := make(chan job, len(issues))
+		results := make(chan result, len(issues))
+
+		worker := func(id int, jobs <-chan job, results chan<- result) {
+			for j := range jobs {
+				msg := fmt.Sprintf("#%d - %s ", j.issue.ID, j.issue.Subject)
+				success := true
+				if !j.dryRun {
+					err = rm.SetRelease(j.issue, j.rID)
+					if err != nil {
+						success = false
+						msg = fmt.Sprintf("%s [error] (%s)\n", msg, err)
+					} else {
+						msg = fmt.Sprintf("%s [changed]\n", msg)
+					}
+				} else {
+					msg = fmt.Sprintf("%s [skipped]\n", msg)
 				}
-				fmt.Printf("[changed]\n")
-			} else {
-				fmt.Printf("[skipped]\n")
+				results <- result{
+					msg:     msg,
+					success: success,
+				}
 			}
+		}
+
+		wn := 8
+		if len(issues) < wn {
+			wn = len(issues)
+		}
+		for w := 1; w <= wn; w++ {
+			wg.Add(1)
+			w := w
+			go func() {
+				defer wg.Done()
+				worker(w, jobs, results)
+			}()
+		}
+
+		for _, issue := range issues {
+			jobs <- job{
+				issue:  issue,
+				rID:    rID,
+				dryRun: dryRun,
+			}
+		}
+		close(jobs)
+
+		succeded := true
+		errCount := 0
+		var wg2 sync.WaitGroup
+		wg2.Add(1)
+		go func() {
+			defer wg2.Done()
+			for r := range results {
+				fmt.Printf(r.msg)
+				if !r.success {
+					succeded = false
+					errCount += 1
+				}
+			}
+		}()
+
+		wg.Wait()
+		close(results)
+		wg2.Wait()
+		if !succeded {
+			log.Fatalf("Warning: %d error(s) found.", errCount)
 		}
 	},
 }
