@@ -1,18 +1,17 @@
 # Copyright (C) The Arvados Authors. All rights reserved.
 #
 # SPDX-License-Identifier: Apache-2.0
-jenkins/test-arvados-multinode/.gitignore
+.gitignore
+*/.gitignore
 jenkins/test-arvados-multinode/terraform/outputs.tf
 jenkins/test-arvados-multinode/terraform/variables.tf
 jenkins/test-arvados-multinode/terraform/terraform.tfvars
 jenkins/test-arvados-multinode/terraform/provider.tf
 jenkins/test-arvados-multinode/terraform/main.tf
 jenkins/test-arvados-multinode/certs/*
-jenkins/packer-images/.gitignore
 jenkins/packer-images/*.json
 jenkins/packer-images/1078ECD7.asc
 go.mod
 go.sum
 cmd/art/TASKS
-cmd/review-task-reminder/.gitignore
 cmd/review-task-reminder/emailTemplate.txt

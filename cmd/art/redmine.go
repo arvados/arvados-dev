@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"sort"
 	"strconv"
+	"sync"
 	"time"
 
 	"git.arvados.org/arvados-dev.git/lib/redmine"
@@ -42,6 +43,19 @@ func init() {
 		log.Fatalf(err.Error())
 	}
 	issuesCmd.AddCommand(associateIssueCmd)
+
+	associateOrphans.Flags().IntP("release", "r", 0, "Redmine release ID")
+	err = associateOrphans.MarkFlagRequired("release")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	associateOrphans.Flags().StringP("project", "p", "", "Redmine project name")
+	err = associateOrphans.MarkFlagRequired("project")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	associateOrphans.Flags().BoolP("dry-run", "", false, "Only report what will happen without making any change")
+	issuesCmd.AddCommand(associateOrphans)
 
 	findAndAssociateIssuesCmd.Flags().IntP("release", "r", 0, "Redmine release ID")
 	err = findAndAssociateIssuesCmd.MarkFlagRequired("release")
@@ -121,6 +135,134 @@ var issuesCmd = &cobra.Command{
 	Long: "Manage Redmine issues.\n" +
 		"\nThe REDMINE_ENDPOINT environment variable must be set to the base URL of your redmine server." +
 		"\nThe REDMINE_APIKEY environment variable must be set to your redmine API key.",
+}
+
+var associateOrphans = &cobra.Command{
+	Use:   "associate-orphans", // FIXME
+	Short: "Find open issues without a release and version, assign them to the given release",
+	Long: "Find open issues without a release and version, assign them to the given release.\n" +
+		"\nThe REDMINE_ENDPOINT environment variable must be set to the base URL of your redmine server." +
+		"\nThe REDMINE_APIKEY environment variable must be set to your redmine API key.",
+	Run: func(cmd *cobra.Command, args []string) {
+		rID, err := cmd.Flags().GetInt("release")
+		if err != nil {
+			fmt.Printf("Error converting Redmine release ID to integer: %s", err)
+			os.Exit(1)
+		}
+		pName, err := cmd.Flags().GetString("project")
+		if err != nil {
+			log.Fatalf("Error getting the requested project name: %s", err)
+		}
+		dryRun, err := cmd.Flags().GetBool("dry-run")
+		if err != nil {
+			log.Fatalf("Error getting the dry-run parameter")
+		}
+
+		rm := redmine.NewClient(conf.Endpoint, conf.Apikey)
+		p, err := rm.GetProjectByName(pName)
+		if err != nil {
+			log.Fatalf("Error retrieving project ID for '%s': %s", pName, err)
+		}
+		r, err := rm.GetRelease(rID)
+		if err != nil {
+			log.Fatalf("Error retrieving release '%d': %s", rID, err)
+		}
+		flt := redmine.IssueFilter{
+			StatusID:  "open",
+			ProjectID: fmt.Sprintf("%d", p.ID),
+			// No values assigned on the following fields. It seems that using
+			// an empty string is interpreted as 'any value'. The documentation
+			// isn't clear, but after some trial & error, '!*' seems to do the trick.
+			// https://www.redmine.org/projects/redmine/wiki/Rest_Issues
+			ReleaseID: "!*",
+			VersionID: "!*",
+			ParentID:  "!*",
+		}
+		issues, err := rm.FilteredIssues(&flt)
+		if err != nil {
+			fmt.Printf("Error requesting unassigned open issues from project %d: %s", p.ID, err)
+		}
+		fmt.Printf("Found %d issues from project '%s' to assign to release '%s'...\n", len(issues), p.Name, r.Name)
+
+		type job struct {
+			issue  redmine.Issue
+			rID    int
+			dryRun bool
+		}
+		type result struct {
+			msg     string
+			success bool
+		}
+		var wg sync.WaitGroup
+		jobs := make(chan job, len(issues))
+		results := make(chan result, len(issues))
+
+		worker := func(id int, jobs <-chan job, results chan<- result) {
+			for j := range jobs {
+				msg := fmt.Sprintf("#%d - %s ", j.issue.ID, j.issue.Subject)
+				success := true
+				if !j.dryRun {
+					err = rm.SetRelease(j.issue, j.rID)
+					if err != nil {
+						success = false
+						msg = fmt.Sprintf("%s [error] (%s)\n", msg, err)
+					} else {
+						msg = fmt.Sprintf("%s [changed]\n", msg)
+					}
+				} else {
+					msg = fmt.Sprintf("%s [skipped]\n", msg)
+				}
+				results <- result{
+					msg:     msg,
+					success: success,
+				}
+			}
+		}
+
+		wn := 8
+		if len(issues) < wn {
+			wn = len(issues)
+		}
+		for w := 1; w <= wn; w++ {
+			wg.Add(1)
+			w := w
+			go func() {
+				defer wg.Done()
+				worker(w, jobs, results)
+			}()
+		}
+
+		for _, issue := range issues {
+			jobs <- job{
+				issue:  issue,
+				rID:    rID,
+				dryRun: dryRun,
+			}
+		}
+		close(jobs)
+
+		succeded := true
+		errCount := 0
+		var wg2 sync.WaitGroup
+		wg2.Add(1)
+		go func() {
+			defer wg2.Done()
+			for r := range results {
+				fmt.Printf(r.msg)
+				if !r.success {
+					succeded = false
+					errCount += 1
+				}
+			}
+		}()
+
+		wg.Wait()
+		close(results)
+		wg2.Wait()
+		if !succeded {
+			log.Fatalf("Warning: %d error(s) found.", errCount)
+		}
+	},
 }
 
 var associateIssueCmd = &cobra.Command{
@@ -239,7 +381,7 @@ var findAndAssociateIssuesCmd = &cobra.Command{
 		//arvRepo := "https://git.arvados.org/arvados.git"
 		//arvRepo := "https://github.com/arvados/arvados.git"
 
-		fmt.Println("Cloning "+arvRepo)
+		fmt.Println("Cloning " + arvRepo)
 		repo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
 			URL: arvRepo,
 		})
