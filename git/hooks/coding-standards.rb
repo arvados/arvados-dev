@@ -62,7 +62,7 @@ $broken_commit_message = /Please enter a commit message to explain why this merg
 $wrong_way_merge_main = /Merge( remote-tracking)? branch '([^\/]+\/)?main' into/
 $merge_main = /Merge branch '[^']+'((?! into)| into main)/
 $pull_merge = /Merge branch 'main' of /
-$refs_or_closes_or_no_issue = /(refs #|closes #|fixes #|no issue #)/i
+$refs_or_closes_or_no_issue = /(refs #|closes #|fixes #|resolves #|no issue #)/i
 
 # enforced custom commit message format
 def check_message_format
@@ -132,8 +132,8 @@ def check_message_format
     # this test will complain about *every* commit in the merge otherwise, obscuring
     # the real reason for the rejection (the no_ff merge)
     if not no_ff and not $refs_or_closes_or_no_issue.match(message)
-      puts "\n[POLICY] All commits to main must include an issue using \"refs #\" or"
-      puts "\"closes #\", or specify \"no issue #\"\n"
+      puts "\n[POLICY] All commits to main must include an issue using \"refs #\","
+      puts "\"fixes #\", \"closes #\", or \"resolves #\", or specify \"no issue #\"\n"
       puts "\n******************************************************************\n"
       puts "\nOffending commit: #{rev}\n"
       puts "\nOffending commit message:\n\n"
