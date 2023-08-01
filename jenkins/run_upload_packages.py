@@ -251,6 +251,7 @@ createrepo -c ~/.createrepo-cache --update "$REPODIR"
         super().__init__(glob_root, rel_globs, target, ssh_host, ssh_opts)
         self.TARGET_REPODIRS = {
             'centos7': 'CentOS/7/%s/x86_64/' % repo,
+            'rocky8': 'CentOS/8/%s/x86_64/' % repo,
         }
 
     def post_uploads(self, paths):
@@ -309,7 +310,7 @@ def parse_arguments(arguments):
         PACKAGE_SUITES[target] = _define_suite(
             DebianPackageSuite, os.path.join('packages', target, '*.deb'),
             target=target, repo=args.repo)
-    for target in ['centos7']:
+    for target in ['centos7', 'rocky8']:
         PACKAGE_SUITES[target] = _define_suite(
             RedHatPackageSuite, os.path.join('packages', target, '*.rpm'),
             target=target, repo=args.repo)
