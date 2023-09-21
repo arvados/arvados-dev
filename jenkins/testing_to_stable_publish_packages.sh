@@ -32,13 +32,12 @@ done
 if [ -z "${packages}" ]; then
   echo "You must provide a comma-separated list of packages to publish, ie."
   echo "* Debian: --packages=arvados-ws:0.1.20170906144951.22418ed6e-1,keep-exercise:1.2.3-1"
-  echo "* Centos: --packages=arvados-ws:0.1.20170906144951.22418ed6e-1,keep-exercise:1.2.3-1"
   exit 254
 fi
 if [ -z "${distros}" ]; then
   echo "You must provide a space-separated list of LSB distribution codenames to which you want to publish to, ie."
   echo "* Debian: --distros=jessie,xenial,stretch,etc."
-  echo "* Centos: --distros=centos7,etc."
+  echo "* CentOS/Rocky: --distros=centos7,etc."
   exit 255
 fi
 
@@ -46,15 +45,19 @@ DIST_LIST=$(echo ${distros} | sed s/,/' '/g |tr '[:upper:]' '[:lower:]')
 CENTOS_PACKAGES=$(echo ${packages} | sed 's/\([a-z-]*\):[[:blank:]]*\([0-9.-]*\)/\1*\2*/g; s/,/ /g;')
 DEBIAN_PACKAGES=$(echo ${packages} | sed 's/\([a-z-]*\):[[:blank:]]*\([0-9.-]*\)/\1 (= \2)/g;')
 
-if ( echo ${DIST_LIST} |grep -q centos ); then
+if ( echo ${DIST_LIST} |grep -q -E '(centos|rocky)' ); then
   for DISTNAME in ${DIST_LIST}; do
     case ${DISTNAME} in
       'centos7')
         DIST_DIR_TEST='7/testing/x86_64'
         DIST_DIR_PROD='7/os/x86_64'
+	;;
+      'rocky8')
+        DIST_DIR_TEST='8/testing/x86_64'
+        DIST_DIR_PROD='8/os/x86_64'
       ;;
       *)
-        echo "Only centos7 is accepted right now"
+        echo "Only centos7 and rocky8 are accepted right now"
         exit 253
       ;;
     esac

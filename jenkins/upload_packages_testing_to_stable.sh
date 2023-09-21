@@ -46,7 +46,7 @@ PACKAGES_LIST=$(echo ${PACKAGES_TO_PUBLISH} | sed 's/versions://g; s/\([a-z-]*\)
 
 DISTROS=$(echo "${LSB_DISTRIB_CODENAMES}"|sed s/[[:space:]]/,/g |tr '[:upper:]' '[:lower:]')
 
-if ( echo ${LSB_DISTRIB_CODENAMES} |grep -q centos ); then
+if ( echo ${LSB_DISTRIB_CODENAMES} |grep -q -E '(centos|rocky)' ); then
   REPO_SERVER=${RPM_REPO_SERVER}
 else
   REPO_SERVER=${APT_REPO_SERVER}
