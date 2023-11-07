@@ -10,7 +10,7 @@ set -eo pipefail
 sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get install -y libpam0g-dev wget build-essential"
 
 # Install docker (used in our tests and also for package building/testing)
-sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io make wget dpkg-dev createrepo unzip"
+sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io make wget dpkg-dev createrepo-c unzip"
 sudo usermod -a -G docker jenkins
 
 # Check out a local copy of the arvados repo so we can use it to install the dependencies

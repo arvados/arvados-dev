@@ -7,7 +7,7 @@
 set -eo pipefail
 
 # Install the dependencies for the package building/testing jobs
-sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io make wget dpkg-dev createrepo unzip"
+sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io make wget dpkg-dev createrepo-c unzip"
 sudo usermod -a -G docker jenkins
 
 #Packer install
