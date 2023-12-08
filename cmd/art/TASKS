@@ -21,6 +21,7 @@ Publish R package
 Publish arvados/arvbox-demo image
 Tag commits, fast-forward X.Y-release branch to match X.Y-staging
 Ensure doc.arvados.org is up to date
+Update pirca and jutro to stable release
 Merge release notes (step 6) from "develop" to "main" on arvados.org
 Send out release announcements
 Major releases only: Copy "run-tests" jobs in jenkins
