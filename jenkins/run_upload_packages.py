@@ -227,8 +227,10 @@ aptly publish update "$DISTNAME" filesystem:"${DISTNAME%-*}":
         self.TARGET_DISTNAMES = {
             'debian10': 'buster-'+repo,
             'debian11': 'bullseye-'+repo,
+            'debian12': 'bookworm-'+repo,
             'ubuntu1804': 'bionic-'+repo,
             'ubuntu2004': 'focal-'+repo,
+            'ubuntu2204': 'jammy-'+repo,
             }
 
     def post_uploads(self, paths):
@@ -306,7 +308,10 @@ def parse_arguments(arguments):
     if args.workspace is None:
         parser.error("workspace not set from command line or environment")
 
-    for target in ['debian10', 'debian11', 'ubuntu1804', 'ubuntu2004']:
+    for target in [
+            'debian10', 'debian11', 'debian12',
+            'ubuntu1804', 'ubuntu2004', 'ubuntu2204',
+    ]:
         PACKAGE_SUITES[target] = _define_suite(
             DebianPackageSuite, os.path.join('packages', target, '*.deb'),
             target=target, repo=args.repo)
