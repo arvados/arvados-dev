@@ -10,12 +10,6 @@ set -eo pipefail
 sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io make wget dpkg-dev createrepo-c unzip"
 sudo usermod -a -G docker jenkins
 
-#Packer install
-cd /tmp
-wget https://releases.hashicorp.com/packer/1.8.0/packer_1.8.0_linux_amd64.zip
-unzip packer_1.8.0_linux_amd64.zip packer
-sudo mv packer /usr/local/bin/
-
 # Install the arvados-dev repo where the Jenkins job expects it
 cd /usr/local
 sudo git clone --depth 1 https://github.com/arvados/arvados-dev
