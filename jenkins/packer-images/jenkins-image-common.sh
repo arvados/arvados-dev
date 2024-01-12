@@ -48,12 +48,6 @@ sudo chown jenkins:jenkins arvados.git -R
 # Jenkins will use this script to determine when the node is ready for use
 sudo mv /tmp/node-ready.sh /usr/local/bin/
 
-# Packer install
-cd /tmp
-wget https://releases.hashicorp.com/packer/1.8.0/packer_1.8.0_linux_amd64.zip
-unzip packer_1.8.0_linux_amd64.zip packer
-sudo mv packer /usr/local/bin/
-
 # make sure sshd does not start on boot (yes, this is nasty). Jenkins will call
 # /tmp/node-ready.sh as a GCP `startup script`, which gets run on node start.
 # That script loops until it can connect to git.arvados.org, and then starts
