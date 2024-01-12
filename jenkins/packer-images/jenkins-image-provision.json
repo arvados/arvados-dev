@@ -14,7 +14,8 @@
       "disk_size": "20",
       "image_name": "jenkins-image-provision-{{user `distro`}}-{{isotime \"20060102150405\"}}",
       "image_family": "jenkins",
-      "ssh_username": "jenkins"
+      "ssh_username": "jenkins",
+      "temporary_key_pair_type" : "ed25519"
     }
   ],
   "provisioners": [
