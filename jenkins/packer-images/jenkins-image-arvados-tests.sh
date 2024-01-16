@@ -36,6 +36,10 @@ sudo go run ./cmd/arvados-server install -type test
 # This is used in our test suite.
 echo user_allow_other | sudo tee -a /etc/fuse.conf
 
+# React uses a lot of filesystem watchers (via inotify). Increase the default
+# so we have a higher limit at runtime.
+echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
+
 # Our Jenkins jobs use this directory to store the temporary files for the tests
 mkdir /home/jenkins/tmp
 
