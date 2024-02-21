@@ -19,7 +19,7 @@ sudo git clone arvados.git
 
 if [[ "$GIT_HASH" != "" ]]; then
   echo "GIT_HASH is set to $GIT_HASH, checking out that revision..."
-  sudo git checkout $GIT_HASH
+  (cd arvados && sudo git checkout $GIT_HASH)
 fi
 
 # Install the correct version of Go
