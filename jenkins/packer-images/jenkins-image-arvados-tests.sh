@@ -17,6 +17,11 @@ sudo usermod -a -G docker jenkins
 cd /usr/src
 sudo git clone arvados.git
 
+if [[ "$GIT_HASH" != "" ]]; then
+  echo "GIT_HASH is set to $GIT_HASH, checking out that revision..."
+  sudo git checkout $GIT_HASH
+fi
+
 # Install the correct version of Go
 GO_VERSION=`grep 'const goversion =' /usr/src/arvados/lib/install/deps.go |awk -F'"' '{print $2}'`
 cd /usr/src
