@@ -1,6 +1,7 @@
 {
   "variables": {
-        "key_file": "{{env `packerbuildkey`}}"
+        "key_file": "{{env `packerbuildkey`}}",
+        "git_hash": "{{env `git_hash`}}"
     },
   "builders": [
     {
