@@ -233,3 +233,17 @@ func (c *Client) SetRelease(issue Issue, release int) error {
 	issue.Release = nil
 	return c.UpdateIssue(issue)
 }
+
+// SetSprint updates the sprint (fixed_version) for an issue
+func (c *Client) SetSprint(issue Issue, version int) error {
+	issue.FixedVersionID = version
+	issue.FixedVersion = nil
+	return c.UpdateIssue(issue)
+}
+
+// SetStatus updates the status for an issue
+func (c *Client) SetStatus(issue Issue, status int) error {
+	issue.StatusID = status
+	issue.Status = nil
+	return c.UpdateIssue(issue)
+}

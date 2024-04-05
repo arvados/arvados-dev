@@ -44,6 +44,19 @@ func init() {
 	}
 	issuesCmd.AddCommand(associateIssueCmd)
 
+
+	setIssueSprintCmd.Flags().IntP("sprint", "r", 0, "Redmine sprint ID")
+	err = setIssueSprintCmd.MarkFlagRequired("sprint")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	setIssueSprintCmd.Flags().IntP("issue", "i", 0, "Redmine issue ID")
+	err = setIssueSprintCmd.MarkFlagRequired("issue")
+	if err != nil {
+		log.Fatalf(err.Error())
+	}
+	issuesCmd.AddCommand(setIssueSprintCmd)
+
 	associateOrphans.Flags().IntP("release", "r", 0, "Redmine release ID")
 	err = associateOrphans.MarkFlagRequired("release")
 	if err != nil {
@@ -308,6 +321,54 @@ var associateIssueCmd = &cobra.Command{
 			}
 		} else {
 			fmt.Printf("[ok] release for issue %d was already set to %d, not updating\n", i.ID, i.Release["release"].ID)
+		}
+	},
+}
+
+
+var setIssueSprintCmd = &cobra.Command{
+	Use:   "set-sprint",
+	Short: "Set sprint for issue",
+	Long: "Set the sprint for an issue.\n" +
+		"\nThe REDMINE_ENDPOINT environment variable must be set to the base URL of your redmine server." +
+		"\nThe REDMINE_APIKEY environment variable must be set to your redmine API key.",
+	Run: func(cmd *cobra.Command, args []string) {
+		issueID, err := cmd.Flags().GetInt("issue")
+		if err != nil {
+			fmt.Printf("Error converting Redmine issue ID to integer: %s", err)
+			os.Exit(1)
+		}
+
+		sprintID, err := cmd.Flags().GetInt("sprint")
+		if err != nil {
+			fmt.Printf("Error converting Redmine sprint ID to integer: %s", err)
+			os.Exit(1)
+		}
+
+		redmine := redmine.NewClient(conf.Endpoint, conf.Apikey)
+
+		i, err := redmine.GetIssue(issueID)
+		if err != nil {
+			fmt.Printf("%s\n", err.Error())
+			os.Exit(1)
+		}
+
+		var setIt bool
+		if i.FixedVersion == nil {
+			setIt = true
+		} else if i.FixedVersion.ID != sprintID {
+			setIt = true
+		}
+		if setIt {
+			err = redmine.SetSprint(*i, sprintID)
+			if err != nil {
+				fmt.Printf("%s\n", err.Error())
+				os.Exit(1)
+			} else {
+				fmt.Printf("[changed] sprint for issue %d set to %d\n", i.ID, sprintID)
+			}
+		} else {
+			fmt.Printf("[ok] sprint for issue %d was already set to %d, not updating\n", i.ID, i.FixedVersion.ID)
 		}
 	},
 }
