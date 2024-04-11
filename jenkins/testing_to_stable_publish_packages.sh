@@ -46,6 +46,9 @@ CENTOS_PACKAGES=$(echo ${packages} | sed 's/\([a-z-]*\):[[:blank:]]*\([0-9.-]*\)
 DEBIAN_PACKAGES=$(echo ${packages} | sed 's/\([a-z-]*\):[[:blank:]]*\([0-9.-]*\)/\1 (= \2)/g;')
 
 for DISTNAME in ${DIST_LIST}; do
+    echo
+    echo "### Publishing packages for ${DISTNAME} ###"
+    echo
     if ( echo ${DISTNAME} |grep -q -E '(centos|rocky)' ); then
 	case ${DISTNAME} in
 	    'centos7')
