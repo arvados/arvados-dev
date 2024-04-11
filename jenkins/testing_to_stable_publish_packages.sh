@@ -71,7 +71,7 @@ if ( echo ${DIST_LIST} |grep -q -E '(centos|rocky)' ); then
       fi
     done
     echo "Recreating repo CentOS/${DIST_DIR_PROD} ..."
-    createrepo ${RPM_REPO_BASE_DIR}/CentOS/${DIST_DIR_PROD}
+    createrepo_c ${RPM_REPO_BASE_DIR}/CentOS/${DIST_DIR_PROD}
   done
 else
   for DISTNAME in ${DIST_LIST}; do
