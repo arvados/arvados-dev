@@ -23,7 +23,7 @@ fi
 if [ -z "${LSB_DISTRIB_CODENAMES}" ]; then
   echo "You must provide a space-separated list of LSB distribution codenames to which you want to publish to, ie."
   echo "* Debian/Ubuntu: buster, bullseye, focal"
-  echo "* Centos: centos7 (the only one currently supported.)"
+  echo "* Redhat: centos7 rocky8"
   exit 255
 fi
 
@@ -52,10 +52,19 @@ else
   REPO_SERVER=${APT_REPO_SERVER}
 fi
 
-REMOTE_CMD="/usr/local/bin/testing_to_stable_publish_packages.sh --distros ${DISTROS} --packages ${PACKAGES_LIST}"
+# Make sure jenkins scripts are up to date
+ssh -t \
+    -l jenkinsapt \
+    -p $SSH_PORT \
+    -o "StrictHostKeyChecking no" \
+    -o "ConnectTimeout 5" \
+    ${REPO_SERVER} \
+    "cd ~/arvados-dev && git fetch -a && git reset --hard origin/main"
 
 # Now we execute it remotely
 TMP_FILE=`mktemp`
+
+REMOTE_CMD="~/arvados-dev/jenkins/testing_to_stable_publish_packages.sh --distros ${DISTROS} --packages ${PACKAGES_LIST}"
 
 ssh -t \
     -l jenkinsapt \

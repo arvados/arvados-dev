@@ -45,58 +45,55 @@ DIST_LIST=$(echo ${distros} | sed s/,/' '/g |tr '[:upper:]' '[:lower:]')
 CENTOS_PACKAGES=$(echo ${packages} | sed 's/\([a-z-]*\):[[:blank:]]*\([0-9.-]*\)/\1*\2*/g; s/,/ /g;')
 DEBIAN_PACKAGES=$(echo ${packages} | sed 's/\([a-z-]*\):[[:blank:]]*\([0-9.-]*\)/\1 (= \2)/g;')
 
-if ( echo ${DIST_LIST} |grep -q -E '(centos|rocky)' ); then
-  for DISTNAME in ${DIST_LIST}; do
-    case ${DISTNAME} in
-      'centos7')
-        DIST_DIR_TEST='7/testing/x86_64'
-        DIST_DIR_PROD='7/os/x86_64'
-	;;
-      'rocky8')
-        DIST_DIR_TEST='8/testing/x86_64'
-        DIST_DIR_PROD='8/os/x86_64'
-      ;;
-      *)
-        echo "Only centos7 and rocky8 are accepted right now"
-        exit 253
-      ;;
-    esac
-    cd ${RPM_REPO_BASE_DIR}
-    mkdir -p ${RPM_REPO_BASE_DIR}/CentOS/${DIST_DIR_PROD}
-    echo "Copying packages ..."
-    for P in ${CENTOS_PACKAGES}; do
-      cp ${RPM_REPO_BASE_DIR}/CentOS/${DIST_DIR_TEST}/${P} ${RPM_REPO_BASE_DIR}/CentOS/${DIST_DIR_PROD}/
-      if [ $? -ne 0 ]; then
-        FAILED_PACKAGES="${FAILED_PACKAGES} ${P}"
-      fi
-    done
-    echo "Recreating repo CentOS/${DIST_DIR_PROD} ..."
-    createrepo_c ${RPM_REPO_BASE_DIR}/CentOS/${DIST_DIR_PROD}
-  done
-else
-  for DISTNAME in ${DIST_LIST}; do
-    ADDED=()
-    echo "Copying packages ..."
-    OLDIFS=$IFS
-    IFS=$','
-    for P in ${DEBIAN_PACKAGES}; do
-      aptly repo search ${DISTNAME}-testing "${P}"
-      if [ $? -ne 0 ]; then
-        echo "ERROR: unable to find a match for '${P}' in ${DISTNAME}-testing"
-        FAILED_PACKAGES="${FAILED_PACKAGES} ${DISTNAME}-testing:${P}"
-      else
-        aptly repo copy ${DISTNAME}-testing ${DISTNAME} "${P}"
-        if [ $? -ne 0 ]; then
-          echo "ERROR: unable to copy '${P}' from ${DISTNAME}-testing to ${DISTNAME}"
-          FAILED_PACKAGES="${FAILED_PACKAGES} ${DISTNAME}-testing:${P}"
-        fi
-      fi
-    done
-    IFS=$OLDIFS
-    echo "Publishing ${DISTNAME} repository..."
-    aptly publish update ${DISTNAME} filesystem:${DISTNAME}:
-  done
-fi
+for DISTNAME in ${DIST_LIST}; do
+    if ( echo ${DISTNAME} |grep -q -E '(centos|rocky)' ); then
+	case ${DISTNAME} in
+	    'centos7')
+		DIST_DIR_TEST='7/testing/x86_64'
+		DIST_DIR_PROD='7/os/x86_64'
+		;;
+	    'rocky8')
+		DIST_DIR_TEST='8/testing/x86_64'
+		DIST_DIR_PROD='8/os/x86_64'
+		;;
+	    *)
+		echo "Only centos7 and rocky8 are accepted right now"
+		exit 253
+		;;
+	esac
+	cd ${RPM_REPO_BASE_DIR}
+	mkdir -p ${RPM_REPO_BASE_DIR}/CentOS/${DIST_DIR_PROD}
+	echo "Copying packages ..."
+	for P in ${CENTOS_PACKAGES}; do
+	    cp ${RPM_REPO_BASE_DIR}/CentOS/${DIST_DIR_TEST}/${P} ${RPM_REPO_BASE_DIR}/CentOS/${DIST_DIR_PROD}/
+	    if [ $? -ne 0 ]; then
+		FAILED_PACKAGES="${FAILED_PACKAGES} ${P}"
+	    fi
+	done
+	echo "Recreating repo CentOS/${DIST_DIR_PROD} ..."
+	createrepo_c ${RPM_REPO_BASE_DIR}/CentOS/${DIST_DIR_PROD}
+    else
+	echo "Copying packages ..."
+	OLDIFS=$IFS
+	IFS=$','
+	for P in ${DEBIAN_PACKAGES}; do
+	    aptly repo search ${DISTNAME}-testing "${P}"
+	    if [ $? -ne 0 ]; then
+		echo "ERROR: unable to find a match for '${P}' in ${DISTNAME}-testing"
+		FAILED_PACKAGES="${FAILED_PACKAGES} ${DISTNAME}-testing:${P}"
+	    else
+		aptly repo copy ${DISTNAME}-testing ${DISTNAME} "${P}"
+		if [ $? -ne 0 ]; then
+		    echo "ERROR: unable to copy '${P}' from ${DISTNAME}-testing to ${DISTNAME}"
+		    FAILED_PACKAGES="${FAILED_PACKAGES} ${DISTNAME}-testing:${P}"
+		fi
+	    fi
+	done
+	IFS=$OLDIFS
+	echo "Publishing ${DISTNAME} repository..."
+	aptly publish update ${DISTNAME} filesystem:${DISTNAME}:
+    fi
+done
 
 if [ "${FAILED_PACKAGES}" != "" ]; then
   echo "PACKAGES THAT FAILED TO PUBLISH"
