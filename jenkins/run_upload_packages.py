@@ -205,14 +205,11 @@ class DistroPackageSuite(PackageSuite):
 
 class DebianPackageSuite(DistroPackageSuite):
     APT_SCRIPT = """
+set -e
 cd "$1"; shift
 DISTNAME=$1; shift
 for package in "$@"; do
-  set +e
-  aptly repo search "$DISTNAME" "${package%.deb}" >/dev/null 2>&1
-  RET=$?
-  set -e
-  if [[ $RET -eq 0 ]]; then
+  if aptly repo search "$DISTNAME" "${package%.deb}" >/dev/null 2>&1; then
     echo "Not adding $package, it is already present in repo $DISTNAME"
     rm "$package"
   else
