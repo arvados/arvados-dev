@@ -205,14 +205,17 @@ class DistroPackageSuite(PackageSuite):
 
 class DebianPackageSuite(DistroPackageSuite):
     APT_SCRIPT = """
+set -e
 cd "$1"; shift
 DISTNAME=$1; shift
+# aptly implements its own locking, but its wait strategy as of April 2024 is
+# not patient enough to accommodate multiple simultaneous uploads.
+APTLY_LOCK="${XDG_RUNTIME_DIR:-/tmp}/aptly-upload.lock"
+aptly() {
+  flock --wait=300 "$APTLY_LOCK" aptly "$@"
+}
 for package in "$@"; do
-  set +e
-  aptly repo search "$DISTNAME" "${package%.deb}" >/dev/null 2>&1
-  RET=$?
-  set -e
-  if [[ $RET -eq 0 ]]; then
+  if aptly repo search "$DISTNAME" "${package%.deb}" >/dev/null 2>&1; then
     echo "Not adding $package, it is already present in repo $DISTNAME"
     rm "$package"
   else
