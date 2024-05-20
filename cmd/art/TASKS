@@ -1,15 +1,15 @@
 Prepare X.Y-staging branch
 Update the "Upgrading Arvados and Release notes" doc page (main and release branch), update provision.sh, formula and arvbox to point to release
-Ensure that the entire automated testing pipeline is passing on Jenkins
+Ensure that developer-run-tests and developer-run-tests-doc-sdk-java-R are passing on Jenkins
 Review release branch
 Draft release notes and publish them to www-dev
 Review release notes
 Create next redmine release
 Build RC packages
 Build RC arvados/jobs image
-Ensure installer tests are passing
+Test installer formula / provision scripts with RC packages
 Build compute image & deploy RC packages to playground
-Run bam-to-vcf demo pipeline
+Run CWL conformance tests (jenkins) and bam-to-vcf demo pipeline (playground)
 Manual testing
 Approve RC for release
 Build final release packages
