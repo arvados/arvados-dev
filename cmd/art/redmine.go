@@ -477,7 +477,7 @@ var findAndAssociateIssuesCmd = &cobra.Command{
 
 		iter := object.NewFilterCommitIter(headCommit, &isValid, nil)
 
-		issues := make(map[int]bool)
+		issues := make(map[int]string)
 		re := regexp.MustCompile(`Merge branch `)
 		reNotMain := regexp.MustCompile(`Merge branch .(main|master)`)
 		reIssueRef := regexp.MustCompile(`(Closes|closes|Refs|refs|Fixes|fixes) #(\d+)`)
@@ -490,7 +490,7 @@ var findAndAssociateIssuesCmd = &cobra.Command{
 					if err != nil {
 						checkError(err)
 					}
-					issues[i] = true
+					issues[i] = fmt.Sprintf("%s: %s", c.Hash, c.Message)
 				}
 			}
 
@@ -522,6 +522,7 @@ var findAndAssociateIssuesCmd = &cobra.Command{
 				continue
 			}
 			fmt.Println(i.Subject)
+			fmt.Println(issues[k])
 
 			if i.Release != nil && i.Release["release"].ID != 0 {
 				if i.Release["release"].ID == releaseID {
