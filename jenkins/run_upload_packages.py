@@ -117,40 +117,15 @@ class PackageSuite:
 
 class PythonPackageSuite(PackageSuite):
     LOGGER_PART = 'python'
-    REUPLOAD_REGEXPS = [
-        re.compile(
-            r'^error: Upload failed \(400\): A file named "[^"]+" already exists\b'),
-        re.compile(
-            r'^error: Upload failed \(400\): File already exists\b'),
-        re.compile(
-            r'^error: Upload failed \(400\): Only one sdist may be uploaded per release\b'),
-    ]
-
-    def __init__(self, glob_root, rel_globs):
-        super().__init__(glob_root, rel_globs)
-        self.seen_packages = set()
 
     def upload_file(self, path):
-        src_dir = os.path.dirname(os.path.dirname(path))
-        if src_dir in self.seen_packages:
-            return
-        self.seen_packages.add(src_dir)
-        # We also must run `sdist` before `upload`: `upload` uploads any
-        # distributions previously generated in the command.  It doesn't
-        # know how to upload distributions already on disk.  We write the
-        # result to a dedicated directory to avoid interfering with our
-        # timestamp tracking.
-        cmd = ['python3', 'setup.py']
-        if not self.logger.isEnabledFor(logging.INFO):
-            cmd.append('--quiet')
-        cmd.extend(['bdist_wheel', '--dist-dir', '.upload_dist'])
-        cmd.extend(['sdist', '--dist-dir', '.upload_dist'])
-        cmd.extend(['upload'])
-        upload_returncode, repushed = run_and_grep(
-            cmd, 'stderr', *self.REUPLOAD_REGEXPS, cwd=src_dir)
-        if (upload_returncode != 0) and not repushed:
-            raise subprocess.CalledProcessError(upload_returncode, cmd)
-        shutil.rmtree(os.path.join(src_dir, '.upload_dist'))
+        subprocess.run([
+            'twine', 'upload',
+            '--disable-progress-bar',
+            '--non-interactive',
+            '--skip-existing',
+            path,
+        ], stdin=subprocess.DEVNULL, check=True)
 
 
 class GemPackageSuite(PackageSuite):
@@ -271,10 +246,14 @@ def _define_suite(suite_class, *rel_globs, **kwargs):
 
 PACKAGE_SUITES = {
     'python': _define_suite(PythonPackageSuite,
-                            'sdk/python/dist/*.tar.gz',
                             'sdk/cwl/dist/*.tar.gz',
+                            'sdk/cwl/dist/*.whl',
+                            'sdk/python/dist/*.tar.gz',
+                            'sdk/python/dist/*.whl',
                             'services/fuse/dist/*.tar.gz',
+                            'services/fuse/dist/*.whl',
                             'tools/crunchstat-summary/dist/*.tar.gz',
+                            'tools/crunchstat-summary/dist/*.whl',
                         ),
     'gems': _define_suite(GemPackageSuite,
                           'sdk/ruby/*.gem',
