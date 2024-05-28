@@ -11,8 +11,8 @@ import glob
 import locale
 import logging
 import os
-import pipes
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -191,8 +191,8 @@ class DistroPackageSuite(PackageSuite):
         # self.__class__.__name__ provides $0 for the script, which makes a
         # nicer message if there's an error.
         subprocess.check_call(self._build_cmd(
-                'ssh', self.ssh_host, 'bash', '-ec', pipes.quote(script),
-                self.__class__.__name__, *(pipes.quote(s) for s in args)))
+                'ssh', self.ssh_host, 'bash', '-ec', shlex.quote(script),
+                self.__class__.__name__, *(shlex.quote(s) for s in args)))
 
     def upload_files(self, paths):
         dest_dir = os.path.join(self.REMOTE_DEST_DIR, self.target)
