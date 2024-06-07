@@ -56,4 +56,4 @@ sudo mv /tmp/node-ready.sh /usr/local/bin/
 # sshd so that the Jenkins agent can connect. This avoids the race where Jenkins
 # tries to start a job before the GCP outbound routing is working, and fails on
 # the first thing it needs internet for, the checkout from git.arvados.org
-sudo /bin/systemctl disable sshd
+sudo /bin/systemctl disable ssh
