@@ -209,6 +209,7 @@ aptly publish update "$DISTNAME" filesystem:"${DISTNAME%-*}":
             'ubuntu1804': 'bionic-'+repo,
             'ubuntu2004': 'focal-'+repo,
             'ubuntu2204': 'jammy-'+repo,
+            'ubuntu2404': 'noble-'+repo,
             }
 
     def post_uploads(self, paths):
@@ -292,7 +293,7 @@ def parse_arguments(arguments):
 
     for target in [
             'debian10', 'debian11', 'debian12',
-            'ubuntu1804', 'ubuntu2004', 'ubuntu2204',
+            'ubuntu1804', 'ubuntu2004', 'ubuntu2204', 'ubuntu2404',
     ]:
         PACKAGE_SUITES[target] = _define_suite(
             DebianPackageSuite, os.path.join('packages', target, '*.deb'),
