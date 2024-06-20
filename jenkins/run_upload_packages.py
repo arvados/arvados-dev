@@ -231,8 +231,8 @@ createrepo_c -c ~/.createrepo-cache --update "$REPODIR"
     def __init__(self, glob_root, rel_globs, target, ssh_host, ssh_opts, repo):
         super().__init__(glob_root, rel_globs, target, ssh_host, ssh_opts)
         self.TARGET_REPODIRS = {
-            'centos7': 'CentOS/7/%s/x86_64/' % repo,
-            'rocky8': 'CentOS/8/%s/x86_64/' % repo,
+            'centos7': 'RHEL/7/%s/x86_64/' % repo,
+            'rocky8': 'RHEL/8/%s/x86_64/' % repo,
         }
 
     def post_uploads(self, paths):
