@@ -257,6 +257,7 @@ PACKAGE_SUITES = {
                             'tools/crunchstat-summary/dist/*.whl',
                         ),
     'gems': _define_suite(GemPackageSuite,
+                          'sdk/ruby-google-api-client/*.gem',
                           'sdk/ruby/*.gem',
                           'sdk/cli/*.gem',
                           'services/login-sync/*.gem',
