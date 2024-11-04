@@ -1,4 +1,5 @@
 Prepare X.Y-staging branch
+Build and test new tordo compute node, update third-party package pin versions
 Update the "Upgrading Arvados and Release notes" doc page (main and release branch), update provision.sh, formula and arvbox to point to release
 Ensure that developer-run-tests and developer-run-tests-doc-sdk-java-R are passing on Jenkins
 Review release branch
