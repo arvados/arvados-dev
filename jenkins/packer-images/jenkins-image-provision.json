@@ -26,12 +26,6 @@
     },
     {
       "type": "shell",
-      "inline": [
-        "cloud-init status --wait"
-      ]
-    },
-    {
-      "type": "shell",
       "script": "./jenkins-image-common.sh"
     }
   ]
