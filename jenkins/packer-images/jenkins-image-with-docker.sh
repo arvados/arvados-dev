@@ -25,3 +25,7 @@ sudo chown -R jenkins:jenkins /usr/local/arvados-dev/
 # so we have a higher limit at runtime.
 echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
 sudo sysctl -p
+
+# Use 'docker-hub-mirror.arvados.org' instead of pulling directly from
+# docker hub to avoid getting rate limit errors from docker.io.
+echo '{ "registry-mirrors": ["https://docker-hub-mirror.arvados.org"] }' | sudo tee -a /etc/docker/daemon.json

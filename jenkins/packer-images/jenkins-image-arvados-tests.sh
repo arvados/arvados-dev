@@ -9,9 +9,7 @@ set -eo pipefail
 # Install the dependencies for arvados-server
 sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get install -y libpam0g-dev wget build-essential"
 
-# Install docker (used in our tests and also for package building/testing)
-sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io make wget dpkg-dev createrepo-c unzip"
-sudo usermod -a -G docker jenkins
+# Docker installed earlier by jenkins-image-with-docker.sh
 
 # Check out a local copy of the arvados repo so we can use it to install the dependencies
 cd /usr/src
@@ -41,9 +39,7 @@ sudo go run ./cmd/arvados-server install -type test
 # This is used in our test suite.
 echo user_allow_other | sudo tee -a /etc/fuse.conf
 
-# React uses a lot of filesystem watchers (via inotify). Increase the default
-# so we have a higher limit at runtime.
-echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
+# inotify.max_user_watches set earlier by jenkins-image-with-docker.sh
 
 # Our Jenkins jobs use this directory to store the temporary files for the tests
 mkdir /home/jenkins/tmp
@@ -55,8 +51,4 @@ sudo chown jenkins:jenkins /home/jenkins -R
 sudo chown jenkins:jenkins /usr/src/arvados -R
 sudo -u jenkins ./build/run-tests.sh WORKSPACE=/usr/src/arvados --temp /home/jenkins/tmp --only install
 
-# Install the arvados-dev repo where the jenkins `test-provision-multinode` job
-# expects it
-cd /usr/local
-sudo git clone --depth 1 https://github.com/arvados/arvados-dev
-sudo chown -R jenkins:jenkins /usr/local/arvados-dev/
+# arvados-dev cloned earlier by jenkins-image-with-docker.sh
