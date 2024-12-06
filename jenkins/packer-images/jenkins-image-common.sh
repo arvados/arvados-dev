@@ -22,7 +22,7 @@ for OS_ID in ${ID:-} ${ID_LIKE:-}; do
       PREINSTALL_CMD="/bin/true"
       INSTALL_CMD="yum install -y"
       POSTINSTALL_CMD="/bin/true"
-      PKGS="git nmap-ncat java-11-openjdk"
+      PKGS="git java-11-openjdk jq nmap-ncat python39"
       SSH_SERVICES="sshd.service sshd.socket"
       break
       ;;
@@ -35,7 +35,7 @@ for OS_ID in ${ID:-} ${ID_LIKE:-}; do
       POSTINSTALL_CMD="env DEBIAN_FRONTEND=noninteractive apt-get purge --autoremove -y"
       # SUFFIX packages with - to remove them
       # Remove unattended-upgrades so that it doesn't interfere with our nodes at startup
-      PKGS="git netcat-traditional default-jdk unattended-upgrades-"
+      PKGS="default-jdk git jq netcat-traditional python3-venv unattended-upgrades-"
       SSH_SERVICES="ssh.service"
       break
       ;;
