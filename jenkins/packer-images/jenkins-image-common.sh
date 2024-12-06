@@ -6,8 +6,11 @@
 
 set -eo pipefail
 
-# Wait for cloud-init to finish
-cloud-init status --wait
+# If image uses cloud-init, wait for it to finish
+if cloud-init --version >/dev/null 2>&1
+then
+    cloud-init status --wait
+fi
 
 sudo tee -a ~jenkins/.ssh/authorized_keys >/dev/null <<EOF
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDH8swFWEfEfHhA+C5ezV8SXO/PkzGD1SH5VAQP/XDIrtnUocBZ3CE30lSyqYJI/EVKVqVa/ICQ0YpUwiMK6+3Jr9QQJwVyTmPji2nY3InL+1XAucN6HFJGKY9bYSsNOuKooj22GwBWw3gfJNLg/8qtpVykEq1yRpyh6pGsXT+J5nUZ723vZZTh//sxdN4CM8D8zoDgHc4RbL+zvESnCDrDbtMhg2u1h14RWiFOBAnzYuWcgtVDy2HA9iS0hJFB2UOV50byXLrEetxJ84PTwRsV2irq1y63g58VxwYOUrVZ08MY5qFvHExBjPqeqhRMzE7GufWM5F1CcUuGviOGFWfqMnfG4VOirPkFtRoK2oKRxH+NVPoUXWWxItJQ1dZ9hLDDWgAbxAvLS4Nnl2hvOVAbC7RVpXfoAhIPpL48oS1UprbsZIMxk2ZmRSJB1ykD3aLUvoO4zoD6xADt8uLiPvVYgFWUy1doLxHZqdY1Omc91owgQVPKvQ4vhqsJehQl4ZDS+O+8S7aC5m8sQ/V+NqiiXLH22vN58K7qNrkHWdb1n+rhilMbA5zp3cSKBgwmmNdupyPkJOKvf3IS7i4El+c8RFmRQv4FzGrdjGXAP8LPtt1dWPgHTFYjmrkOHLmfWM/y8cuyPWW/HEp3Y/msPQRlS3Gymce//vAWgN4T9yN46w== lucas@notebook
