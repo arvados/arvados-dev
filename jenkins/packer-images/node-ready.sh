@@ -24,8 +24,8 @@ done
 echo "Connected!"
 
 # All set! Start sshd so jenkins can start the agent...
-systemctl list-units --quiet "ssh*.service" |
-    awk '($1 !~ /@/ && $2 == "loaded") { print $1; }' |
+systemctl list-units --all --full --plain --quiet --type=service "ssh*" |
+    awk '($1 ~ /^[^@]+\.service$/ && $2 == "loaded") { print $1; }' |
     while read ssh_service; do
         systemctl start "$ssh_service"
     done
