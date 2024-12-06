@@ -24,11 +24,11 @@ done
 echo "Connected!"
 
 # All set! Start sshd so jenkins can start the agent...
-systemctl list-units --quiet "ssh*.service" | awk '
-BEGIN { ORS=" "; }
-($1 !~ /@/ && $2 == "loaded") { print $1; }
-' | read ssh_services
-systemctl start $ssh_services || systemctl status $ssh_services
+systemctl list-units --quiet "ssh*.service" |
+    awk '($1 !~ /@/ && $2 == "loaded") { print $1; }' |
+    while read ssh_service; do
+        systemctl start "$ssh_service"
+    done
 
 echo "Completed node-ready.sh"
 # Log a timestamp
