@@ -23,6 +23,7 @@ for OS_ID in ${ID:-} ${ID_LIKE:-}; do
       INSTALL_CMD="yum install -y"
       POSTINSTALL_CMD="/bin/true"
       PKGS="git nmap-ncat java-11-openjdk"
+      SSH_SERVICES="sshd.service sshd.socket"
       break
       ;;
     debian)
@@ -35,6 +36,7 @@ for OS_ID in ${ID:-} ${ID_LIKE:-}; do
       # SUFFIX packages with - to remove them
       # Remove unattended-upgrades so that it doesn't interfere with our nodes at startup
       PKGS="git netcat-traditional default-jdk unattended-upgrades-"
+      SSH_SERVICES="ssh.service"
       break
       ;;
   esac
@@ -59,4 +61,4 @@ sudo mv /tmp/node-ready.sh /usr/local/bin/
 # sshd so that the Jenkins agent can connect. This avoids the race where Jenkins
 # tries to start a job before the GCP outbound routing is working, and fails on
 # the first thing it needs internet for, the checkout from git.arvados.org
-sudo /bin/systemctl disable ssh
+sudo systemctl disable $SSH_SERVICES

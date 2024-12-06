@@ -23,11 +23,12 @@ while ! /bin/nc -w1 -z git.arvados.org 22; do
 done
 echo "Connected!"
 
-# All set! Enable and start sshd so jenkins can start the agent...
-echo "Re-enabling sshd..."
-/bin/systemctl enable ssh || true
-echo "Starting sshd..."
-/bin/systemctl start ssh || /bin/systemctl status ssh
+# All set! Start sshd so jenkins can start the agent...
+systemctl list-units --quiet "ssh*.service" | awk '
+BEGIN { ORS=" "; }
+($1 !~ /@/ && $2 == "loaded") { print $1; }
+' | read ssh_services
+systemctl start $ssh_services || systemctl status $ssh_services
 
 echo "Completed node-ready.sh"
 # Log a timestamp
