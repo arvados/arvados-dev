@@ -6,10 +6,15 @@
 
 set -eo pipefail
 
-# Wait for cloud-init to finish
-cloud-init status --wait
+# If image uses cloud-init, wait for it to finish
+if cloud-init --version >/dev/null 2>&1
+then
+    cloud-init status --wait
+fi
 
-sudo su -c "echo ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDH8swFWEfEfHhA+C5ezV8SXO/PkzGD1SH5VAQP/XDIrtnUocBZ3CE30lSyqYJI/EVKVqVa/ICQ0YpUwiMK6+3Jr9QQJwVyTmPji2nY3InL+1XAucN6HFJGKY9bYSsNOuKooj22GwBWw3gfJNLg/8qtpVykEq1yRpyh6pGsXT+J5nUZ723vZZTh//sxdN4CM8D8zoDgHc4RbL+zvESnCDrDbtMhg2u1h14RWiFOBAnzYuWcgtVDy2HA9iS0hJFB2UOV50byXLrEetxJ84PTwRsV2irq1y63g58VxwYOUrVZ08MY5qFvHExBjPqeqhRMzE7GufWM5F1CcUuGviOGFWfqMnfG4VOirPkFtRoK2oKRxH+NVPoUXWWxItJQ1dZ9hLDDWgAbxAvLS4Nnl2hvOVAbC7RVpXfoAhIPpL48oS1UprbsZIMxk2ZmRSJB1ykD3aLUvoO4zoD6xADt8uLiPvVYgFWUy1doLxHZqdY1Omc91owgQVPKvQ4vhqsJehQl4ZDS+O+8S7aC5m8sQ/V+NqiiXLH22vN58K7qNrkHWdb1n+rhilMbA5zp3cSKBgwmmNdupyPkJOKvf3IS7i4El+c8RFmRQv4FzGrdjGXAP8LPtt1dWPgHTFYjmrkOHLmfWM/y8cuyPWW/HEp3Y/msPQRlS3Gymce//vAWgN4T9yN46w== lucas@notebook" >> /home/jenkins/.ssh/authorized_keys
+sudo tee -a ~jenkins/.ssh/authorized_keys >/dev/null <<EOF
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDH8swFWEfEfHhA+C5ezV8SXO/PkzGD1SH5VAQP/XDIrtnUocBZ3CE30lSyqYJI/EVKVqVa/ICQ0YpUwiMK6+3Jr9QQJwVyTmPji2nY3InL+1XAucN6HFJGKY9bYSsNOuKooj22GwBWw3gfJNLg/8qtpVykEq1yRpyh6pGsXT+J5nUZ723vZZTh//sxdN4CM8D8zoDgHc4RbL+zvESnCDrDbtMhg2u1h14RWiFOBAnzYuWcgtVDy2HA9iS0hJFB2UOV50byXLrEetxJ84PTwRsV2irq1y63g58VxwYOUrVZ08MY5qFvHExBjPqeqhRMzE7GufWM5F1CcUuGviOGFWfqMnfG4VOirPkFtRoK2oKRxH+NVPoUXWWxItJQ1dZ9hLDDWgAbxAvLS4Nnl2hvOVAbC7RVpXfoAhIPpL48oS1UprbsZIMxk2ZmRSJB1ykD3aLUvoO4zoD6xADt8uLiPvVYgFWUy1doLxHZqdY1Omc91owgQVPKvQ4vhqsJehQl4ZDS+O+8S7aC5m8sQ/V+NqiiXLH22vN58K7qNrkHWdb1n+rhilMbA5zp3cSKBgwmmNdupyPkJOKvf3IS7i4El+c8RFmRQv4FzGrdjGXAP8LPtt1dWPgHTFYjmrkOHLmfWM/y8cuyPWW/HEp3Y/msPQRlS3Gymce//vAWgN4T9yN46w== lucas@notebook
+EOF
 
 # Install a few dependency packages
 . /etc/os-release
@@ -20,27 +25,29 @@ for OS_ID in ${ID:-} ${ID_LIKE:-}; do
       PREINSTALL_CMD="/bin/true"
       INSTALL_CMD="yum install -y"
       POSTINSTALL_CMD="/bin/true"
-      PKGS="git nmap-ncat java-11-openjdk"
+      PKGS="git java-11-openjdk jq nmap-ncat python39"
+      SSH_SERVICES="sshd.service sshd.socket"
       break
       ;;
     debian)
       if [[ "$VERSION_CODENAME" == buster ]]; then
         echo "deb http://deb.debian.org/debian buster-backports main" | sudo tee /etc/apt/sources.list.d/buster-backports.list
       fi
-      PREINSTALL_CMD="DEBIAN_FRONTEND=noninteractive apt-get update"
-      INSTALL_CMD="DEBIAN_FRONTEND=noninteractive apt-get install -y"
-      POSTINSTALL_CMD="DEBIAN_FRONTEND=noninteractive apt-get purge --autoremove -y"
+      PREINSTALL_CMD="env DEBIAN_FRONTEND=noninteractive apt-get update"
+      INSTALL_CMD="env DEBIAN_FRONTEND=noninteractive apt-get install -y"
+      POSTINSTALL_CMD="env DEBIAN_FRONTEND=noninteractive apt-get purge --autoremove -y"
       # SUFFIX packages with - to remove them
       # Remove unattended-upgrades so that it doesn't interfere with our nodes at startup
-      PKGS="git netcat-traditional default-jdk unattended-upgrades-"
+      PKGS="default-jdk git jq netcat-traditional python3-venv unattended-upgrades-"
+      SSH_SERVICES="ssh.service"
       break
       ;;
   esac
 done
 
-sudo su -c "${PREINSTALL_CMD}"
-sudo su -c "${INSTALL_CMD} ${PKGS}"
-sudo su -c "${POSTINSTALL_CMD}"
+sudo ${PREINSTALL_CMD}
+sudo ${INSTALL_CMD} ${PKGS}
+sudo ${POSTINSTALL_CMD}
 
 # create a reference repository (bare git repo)
 # jenkins will use this to speed up the checkout for each job
@@ -57,4 +64,4 @@ sudo mv /tmp/node-ready.sh /usr/local/bin/
 # sshd so that the Jenkins agent can connect. This avoids the race where Jenkins
 # tries to start a job before the GCP outbound routing is working, and fails on
 # the first thing it needs internet for, the checkout from git.arvados.org
-sudo /bin/systemctl disable ssh
+sudo systemctl disable $SSH_SERVICES

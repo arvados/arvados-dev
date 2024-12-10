@@ -7,8 +7,18 @@
 set -eo pipefail
 
 # Install the dependencies for the package building/testing jobs
-sudo su -c "DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io make wget dpkg-dev createrepo-c unzip"
+sudo env DEBIAN_FRONTEND=noninteractive apt-get install -y docker.io make wget dpkg-dev createrepo-c unzip
 sudo usermod -a -G docker jenkins
+
+# Ansible install
+sudo install -d -o "$(id -nu)" -g "$(id -ng)" /opt/ansible
+python3 -m venv /opt/ansible
+/opt/ansible/bin/pip config --quiet --site set global.no-input true
+/opt/ansible/bin/pip config --quiet --site set install.no-cache-dir true
+/opt/ansible/bin/pip config --quiet --site set install.progress-bar off
+/opt/ansible/bin/pip install "pip>=20.3" wheel
+/opt/ansible/bin/pip install "ansible~=8.7" "yq~=3.4"
+sudo chown -R root: /opt/ansible
 
 # Packer install
 cd /tmp
