@@ -33,7 +33,14 @@ sudo ln -s /usr/local/bin/gofmt-${GO_VERSION} /usr/local/bin/gofmt
 # Preseed our dependencies
 cd arvados
 sudo go mod download
-sudo go run ./cmd/arvados-server install -type test
+builddir="$(mktemp --directory --tmpdir arvados-server.XXXXXX)"
+trap 'sudo rm -rf "$builddir"' EXIT ERR INT TERM QUIT
+sudo go build -o "$builddir" ./cmd/arvados-server
+# Install arvados-server on $PATH so that RailsAPI install commands can find it.
+# Remove it afterwards since run-tests.sh should build and use its own copy.
+sudo install "$builddir/arvados-server" /usr/local/bin/
+trap 'sudo rm -rf "$builddir" /usr/local/bin/arvados-server' EXIT ERR INT TERM QUIT
+sudo arvados-server install -type test
 
 # FUSE must be configured with the 'user_allow_other' option enabled for Crunch to set up Keep mounts that are readable by containers.
 # This is used in our test suite.
