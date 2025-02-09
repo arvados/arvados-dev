@@ -25,10 +25,7 @@
           "ANSIBLE_ROLES_PATH=/usr/local/arvados-dev/ansible/roles:/usr/src/arvados/tools/ansible/roles"
       ],
       "extra_arguments": [
-          "--extra-vars", "
-arvados_config_file=/usr/src/arvados/tools/ansible/files/default-test-config.yml
-arvados_postgresql_hba_method=md5
-",
+          "--extra-vars", "arvados_config_file=/usr/src/arvados/tools/ansible/files/default-test-config.yml arvados_postgresql_hba_method=md5",
       ]
   }]
 }
