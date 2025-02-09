@@ -1,0 +1,7 @@
+# Copyright (C) The Arvados Authors. All rights reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+docker_daemon:
+  registry-mirrors:
+    - https://docker-hub-mirror.arvados.org

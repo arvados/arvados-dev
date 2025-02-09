@@ -1,0 +1,35 @@
+### This file is managed by Ansible
+# Copyright (C) The Arvados Authors. All rights reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+[Unit]
+Description=Wait for outbound network connections to succeed
+Before=ssh.service sshd.service
+
+[Install]
+WantedBy=ssh.service sshd.service
+
+[Service]
+Type=oneshot
+TimeoutStartSec=9min
+ExecStart=/bin/sh -c 'while ! nc -w1 -z git.arvados.org 443; do sleep 1s; done;:'
+
+### Everything below this line is security boilerplate
+DynamicUser=on
+CapabilityBoundingSet=
+DevicePolicy=closed
+LockPersonality=on
+MemoryDenyWriteExecute=on
+PrivateDevices=on
+PrivateMounts=on
+PrivateUsers=on
+ProtectControlGroups=on
+ProtectHome=on
+ProtectKernelModules=on
+ProtectKernelTunables=on
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+RestrictNamespaces=on
+RestrictRealtime=on
+SystemCallErrorNumber=EPERM
+SystemCallFilter=@system-service

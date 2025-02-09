@@ -15,19 +15,13 @@
       "ssh_username": "jenkins"
     }
   ],
-  "provisioners": [
-    {
-      "type": "file",
-      "source": "node-ready.sh",
-      "destination": "/tmp/node-ready.sh"
-    },
-    {
-      "type": "shell",
-      "script": "./jenkins-image-common.sh"
-    },
-    {
-      "type": "shell",
-      "script": "./jenkins-image-with-docker.sh"
-    }
-  ]
+  "provisioners": [{
+      "type": "ansible",
+      "command": "/opt/ansible/bin/ansible-playbook",
+      "playbook_file": "../../ansible/jenkins-arvados-packer.yml",
+      "user": "jenkins",
+      "ansible_env_vars": [
+          "ANSIBLE_ROLES_PATH=/usr/local/arvados-dev/ansible/roles:/usr/src/arvados/tools/ansible/roles"
+      ]
+  }]
 }

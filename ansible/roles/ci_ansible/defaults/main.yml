@@ -1,0 +1,8 @@
+# Copyright (C) The Arvados Authors. All rights reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+ci_ansible_venv_dir: /opt/ansible
+ci_ansible_pip_pkgs:
+  - "ansible~=8.7"
+  - "yq~=3.4"

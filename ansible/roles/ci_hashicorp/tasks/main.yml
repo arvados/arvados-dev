@@ -1,0 +1,41 @@
+# Copyright (C) The Arvados Authors. All rights reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+- name: Install Hashicorp apt pins
+  become: yes
+  ansible.builtin.template:
+    src: hashicorp.pref.j2
+    dest: /etc/apt/preferences.d/hashicorp.pref
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Install Hashicorp apt repository
+  become: yes
+  ansible.builtin.deb822_repository:
+    name: hashicorp
+    types: deb
+    uris: https://apt.releases.hashicorp.com
+    suites: "{{ ansible_distribution_release }}"
+    components:
+      - main
+    architectures:
+      # Hashicorp only publishes amd64 packages
+      - amd64
+    signed_by: https://apt.releases.hashicorp.com/gpg
+  register: hashicorp_apt_repo
+
+- name: Install Hashicorp packages
+  become: yes
+  when: hashicorp_apt_pkgs is defined
+  ansible.builtin.apt:
+    update_cache: "{{ hashicorp_apt_repo.changed }}"
+    name: "{{ hashicorp_apt_pkgs|list }}"
+
+- name: Install Packer Ansible plugin
+  when: "'packer' in hashicorp_apt_pkgs|default([])"
+  become: yes
+  become_user: jenkins
+  ansible.builtin.command:
+    cmd: packer plugins install github.com/hashicorp/ansible
