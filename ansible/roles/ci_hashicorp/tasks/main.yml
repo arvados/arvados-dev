@@ -33,9 +33,16 @@
     update_cache: "{{ hashicorp_apt_repo.changed }}"
     name: "{{ hashicorp_apt_pkgs|list }}"
 
-- name: Install Packer Ansible plugin
+- name: Install Packer plugins
   when: "'packer' in hashicorp_apt_pkgs|default([])"
   become: yes
   become_user: jenkins
   ansible.builtin.command:
-    cmd: packer plugins install github.com/hashicorp/ansible
+    argv:
+      - packer
+      - plugins
+      - install
+      - "{{ item }}"
+  loop:
+    - github.com/hashicorp/ansible
+    - github.com/hashicorp/googlecompute
