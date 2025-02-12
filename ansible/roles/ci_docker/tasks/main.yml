@@ -1,0 +1,12 @@
+# Copyright (C) The Arvados Authors. All rights reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+- name: Configure Docker daemon
+  become: yes
+  ansible.builtin.copy:
+    content: "{{ docker_daemon|to_json }}"
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: docker
+    mode: 0640

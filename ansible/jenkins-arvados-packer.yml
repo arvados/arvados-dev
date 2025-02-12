@@ -1,0 +1,20 @@
+# Copyright (C) The Arvados Authors. All rights reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# This playbook sets up a node with core Jenkins tools,
+# Ansible, Docker, and Packer.
+
+- hosts: all
+  tasks:
+    - ansible.builtin.include_role:
+        name: jenkins_base
+    - ansible.builtin.include_role:
+        name: ci_ansible
+    - ansible.builtin.include_role:
+        name: ci_docker
+    - ansible.builtin.include_role:
+        name: ci_hashicorp
+      vars:
+        hashicorp_apt_pkgs:
+          - packer

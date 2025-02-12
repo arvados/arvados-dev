@@ -1,0 +1,10 @@
+# Copyright (C) The Arvados Authors. All rights reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+- name: Install Ansible virtualenv
+  become: yes
+  ansible.builtin.pip:
+    virtualenv: "{{ ci_ansible_venv_dir }}"
+    virtualenv_command: "{{ ansible_python.executable|quote }} -m venv"
+    name: "{{ ci_ansible_pip_pkgs|list }}"

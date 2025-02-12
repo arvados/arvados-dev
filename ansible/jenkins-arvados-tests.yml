@@ -1,0 +1,27 @@
+# Copyright (C) The Arvados Authors. All rights reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# This playbook sets up a node to be able to run the entire
+# Arvados test suite and build packages.
+
+- ansible.builtin.import_playbook: /usr/local/arvados-dev/ansible/jenkins-arvados-packer.yml
+- ansible.builtin.import_playbook: /usr/src/arvados/tools/ansible/install-test-env.yml
+  vars:
+    arvados_dev_user: jenkins
+
+- hosts: all
+  tasks:
+    - name: Initialize test cache
+      become: yes
+      become_user: jenkins
+      ansible.builtin.command:
+        argv:
+          - /usr/src/arvados/build/run-tests.sh
+          - "--only"
+          - install
+          - "--temp"
+          - "{{ (jenkins_user.home, 'tmp')|path_join }}"
+      environment:
+        CONFIGSRC: "{{ (jenkins_user.home, '.config/arvados')|path_join }}"
+        WORKSPACE: /usr/src/arvados

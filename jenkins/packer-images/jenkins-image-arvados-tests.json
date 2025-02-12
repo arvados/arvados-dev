@@ -16,26 +16,16 @@
       "ssh_username": "jenkins"
     }
   ],
-  "provisioners": [
-    {
-      "type": "file",
-      "source": "node-ready.sh",
-      "destination": "/tmp/node-ready.sh"
-    },
-    {
-      "type": "shell",
-      "script": "./jenkins-image-common.sh"
-    },
-    {
-      "type": "shell",
-      "script": "./jenkins-image-with-docker.sh"
-    },
-    {
-      "type": "shell",
-      "environment_vars": [
-        "GIT_HASH={{ user `git_hash` }}"
+  "provisioners": [{
+      "type": "ansible",
+      "command": "/opt/ansible/bin/ansible-playbook",
+      "playbook_file": "../../ansible/jenkins-arvados-tests.yml",
+      "user": "jenkins",
+      "ansible_env_vars": [
+          "ANSIBLE_ROLES_PATH=/usr/local/arvados-dev/ansible/roles:/usr/src/arvados/tools/ansible/roles"
       ],
-      "script": "./jenkins-image-arvados-tests.sh"
-    }
-  ]
+      "extra_arguments": [
+          "--extra-vars", "arvados_config_file=/usr/src/arvados/tools/ansible/files/default-test-config.yml arvados_postgresql_hba_method=md5"
+      ]
+  }]
 }
