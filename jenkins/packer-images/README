@@ -3,28 +3,4 @@
 # SPDX-License-Identifier: CC-BY-SA-3.0
 
 The files under this directory are used to create images used in our Jenkins CI.
-
-*** IMAGE FOR RUNNING TESTS ***
-
-packer build jenkins-image-arvados-tests.json
-
-*** IMAGE FOR RUNNING WB2 TESTS ***
-
-packer build jenkins-image-workbench2.json
-
-*** IMAGE FOR RUNNING FEDERATION TESTS ***
-
-packer build jenkins-image-federation-tests.json
-
-*** IMAGE FOR BUILDING PACKAGES AND DIAGNOSTICS ***
-
-packer build jenkins-image-with-docker.json
-
-*** IMAGE FOR K8S TESTS ***
-
-packer build jenkins-image-k8s-tests.json
-
-*** IMAGE FOR TESTING THE ARVADOS-FORMULA ***
-
-packer build jenkins-image-arvados-formula-tests.json
-
+See <https://dev.arvados.org/projects/ops/wiki/Packer_Builds_for_Jenkins_worker_nodes>.
