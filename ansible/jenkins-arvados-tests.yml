@@ -3,9 +3,22 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 # This playbook sets up a node to be able to run the entire
-# Arvados test suite and build packages.
+# Arvados test suite and build packages and Packer images.
 
-- ansible.builtin.import_playbook: /usr/local/arvados-dev/ansible/jenkins-arvados-packer.yml
+- hosts: all
+  tasks:
+    - ansible.builtin.include_role:
+        name: jenkins_base
+    - ansible.builtin.include_role:
+        name: ci_ansible
+    - ansible.builtin.include_role:
+        name: ci_docker
+    - ansible.builtin.include_role:
+        name: ci_hashicorp
+      vars:
+        hashicorp_apt_pkgs:
+          - packer
+
 - ansible.builtin.import_playbook: /usr/src/arvados/tools/ansible/install-test-env.yml
   vars:
     arvados_dev_user: jenkins
