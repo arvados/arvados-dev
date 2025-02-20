@@ -18,15 +18,10 @@
       "temporary_key_pair_type" : "ed25519"
     }
   ],
-  "provisioners": [
-    {
-      "type": "file",
-      "source": "node-ready.sh",
-      "destination": "/tmp/node-ready.sh"
-    },
-    {
-      "type": "shell",
-      "script": "./jenkins-image-common.sh"
-    }
-  ]
+  "provisioners": [{
+      "type": "ansible",
+      "command": "/opt/ansible/bin/ansible-playbook",
+      "playbook_file": "../../ansible/jenkins-test-provision.yml",
+      "user": "jenkins"
+  }]
 }

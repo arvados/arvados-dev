@@ -1,0 +1,10 @@
+# Copyright (C) The Arvados Authors. All rights reserved.
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+# This playbook sets up a minimal node to run test-provision.
+
+- hosts: all
+  tasks:
+    - ansible.builtin.include_role:
+        name: jenkins_base
