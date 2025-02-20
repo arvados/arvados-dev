@@ -8,3 +8,5 @@
   tasks:
     - ansible.builtin.include_role:
         name: jenkins_base
+    - ansible.builtin.include_role:
+        name: ci_ansible
