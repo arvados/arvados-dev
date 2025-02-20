@@ -44,5 +44,6 @@
       - install
       - "{{ item }}"
   loop:
+    - github.com/hashicorp/amazon
     - github.com/hashicorp/ansible
     - github.com/hashicorp/googlecompute
