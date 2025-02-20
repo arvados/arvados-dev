@@ -11,7 +11,7 @@ APT_REPO_SERVER="apt.arvados.org"
 RPM_REPO_SERVER="rpm.arvados.org"
 
 DEBUG=1
-SSH_PORT=2222
+SSH_PORT=22
 ECODE=0
 
 # Convert package list into a regex for publising
