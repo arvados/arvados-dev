@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-- name: Install buildx plugin for arvbox
+- name: Install Docker buildx plugin for arvbox
   become: yes
   ansible.builtin.apt:
     name:
