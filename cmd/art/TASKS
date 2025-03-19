@@ -1,6 +1,5 @@
 Build and test new tordo compute node, update third-party package pin versions
 Prepare X.Y-staging branch
-Update the "Upgrading Arvados and Release notes" doc page (main and release branch), update provision.sh, formula and arvbox to point to release
 Ensure that developer-run-tests and developer-run-tests-doc-sdk-java-R are passing on Jenkins
 Review release branch
 Draft release notes and publish them to www-dev
@@ -14,7 +13,7 @@ Run CWL conformance tests (jenkins) and bam-to-vcf demo pipeline (playground)
 Manual testing
 Approve RC for release
 Publish Ruby gems
-Update Gemfiles to use published Ruby gems
+Update "Upgrading notes", Gemfiles to use published Ruby gems, bin/arvbox, R/DESCRIPTION, ansible arvados_pin_version
 Build final release packages
 Publish stable arvados/jobs Docker image
 Push packages to stable
