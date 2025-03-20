@@ -26,5 +26,5 @@ Ensure doc.arvados.org is up to date
 Update pirca and jutro to stable release
 Merge release notes (step 6) from "develop" to "main" on arvados.org
 Send out release announcements
-Major releases only: Copy "run-tests" jobs in jenkins
+Record Jenkins config used at time of release
 Add the release to zenodo.org
