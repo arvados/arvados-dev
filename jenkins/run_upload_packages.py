@@ -190,7 +190,7 @@ aptly() {
   flock --wait=300 "$APTLY_LOCK" aptly "$@"
 }
 for package in "$@"; do
-  if aptly repo search "$DISTNAME" "${package%.deb}" >/dev/null 2>&1; then
+  if aptly repo search "$DISTNAME" "${package%.deb}" >/dev/null; then
     echo "Not adding $package, it is already present in repo $DISTNAME"
     rm "$package"
   else
