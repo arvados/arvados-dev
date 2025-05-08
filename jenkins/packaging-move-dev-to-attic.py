@@ -77,7 +77,7 @@ class CollectPackageName:
       # changelog with them (that's where the 'Date' field comes from, as per
       # the Debian policy manual, cf.
       # https://www.debian.org/doc/debian-policy/ch-controlfields.html#s-f-date).
-      the_file = subprocess.getoutput("find " + directory + " -name " + f + ".deb")
+      the_file = subprocess.getoutput("find " + directory + " -name '" + f + ".deb'")
       if the_file == "":
           print("WARNING: skipping package, could not find file for package " + f + " under directory " + directory)
           continue
