@@ -7,7 +7,7 @@
   ansible.builtin.apt:
     name:
       # Common development tools for Jenkins jobs
-      - default-jdk
+      - openjdk-17-jdk
       - git
       - python3-venv
       # Used by check-outbound-network.service
