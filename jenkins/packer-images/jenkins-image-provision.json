@@ -22,6 +22,10 @@
       "type": "ansible",
       "command": "/opt/ansible/bin/ansible-playbook",
       "playbook_file": "../../ansible/jenkins-test-provision.yml",
-      "user": "jenkins"
+      "user": "jenkins",
+      "use_sftp": false,
+      "ansible_env_vars": [
+          "ANSIBLE_SCP_EXTRA_ARGS='-O'"
+      ]
   }]
 }
