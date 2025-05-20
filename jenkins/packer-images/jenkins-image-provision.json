@@ -22,7 +22,6 @@
       "type": "ansible",
       "command": "/opt/ansible/bin/ansible-playbook",
       "playbook_file": "../../ansible/jenkins-test-provision.yml",
-      "user": "jenkins",
-      "extra_arguments": [ "-vvvv" ]
+      "user": "jenkins"
   }]
 }
