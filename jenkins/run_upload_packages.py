@@ -183,11 +183,9 @@ class DebianPackageSuite(DistroPackageSuite):
 set -e
 cd "$1"; shift
 DISTNAME=$1; shift
-# aptly implements its own locking, but its wait strategy as of April 2024 is
-# not patient enough to accommodate multiple simultaneous uploads.
-APTLY_LOCK="${XDG_RUNTIME_DIR:-/tmp}/aptly-upload.lock"
+# We increase database open attempts to accommodate parallel upload jobs.
 aptly() {
-  flock --wait=300 "$APTLY_LOCK" aptly "$@"
+  command aptly -db-open-attempts=60 "$@"
 }
 for package in "$@"; do
   if aptly repo search "$DISTNAME" "${package%.deb}" >/dev/null; then
