@@ -18,7 +18,7 @@
   ],
   "provisioners": [{
       "type": "ansible",
-      "command": "/opt/ansible/bin/ansible-playbook",
+      "command": "/opt/arvados-ansible/bin/ansible-playbook",
       "playbook_file": "../../ansible/jenkins-arvados-tests.yml",
       "user": "jenkins",
       "use_sftp": false,
