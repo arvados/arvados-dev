@@ -9,7 +9,7 @@
     - ansible.builtin.include_role:
         name: jenkins_base
     - ansible.builtin.include_role:
-        name: ci_ansible
+        name: arvados_ansible
       # Arvados tools require at least Ansible 8, which in turn requires
       # Python 3.9+. Don't install it if we don't have that. This is okay
       # because the provision nodes aren't using Ansible *yet*, and these

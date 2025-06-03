@@ -10,8 +10,6 @@
     - ansible.builtin.include_role:
         name: jenkins_base
     - ansible.builtin.include_role:
-        name: ci_ansible
-    - ansible.builtin.include_role:
         name: ci_docker
     - ansible.builtin.include_role:
         name: ci_hashicorp
