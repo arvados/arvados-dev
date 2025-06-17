@@ -1,6 +1,0 @@
-# Copyright (C) The Arvados Authors. All rights reserved.
-#
-# SPDX-License-Identifier: CC-BY-SA-3.0
-
-The files under this directory are used to create images used in our Jenkins CI.
-See <https://dev.arvados.org/projects/ops/wiki/Packer_Builds_for_Jenkins_worker_nodes>.
