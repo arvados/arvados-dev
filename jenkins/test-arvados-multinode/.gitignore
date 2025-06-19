@@ -1,7 +1,0 @@
-.DS_Store
-.terraform
-examples
-*backup
-*disabled
-.terraform.*
-terraform.tfstate*

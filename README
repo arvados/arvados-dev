@@ -1,7 +1,13 @@
+<!--
+Copyright (C) The Arvados Authors. All rights reserved.
+
+SPDX-License-Identifier: AGPL-3.0
+-->
+
 Welcome to Arvados!
 
 This is the arvados-dev source tree. It contains helper scripts that are used
-by the Arvados development team, e.g. for our continuous integration setup.
+to manage the Arvados repository and releases.
 
 If you are interested in using Arvados or setting up your own Arvados
 installation, you most likely do not need this source tree.
