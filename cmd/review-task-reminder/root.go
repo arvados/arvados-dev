@@ -290,11 +290,15 @@ https://git.arvados.org/arvados-dev.git/cmd/review-task-reminder` +
 						log.Fatalf(err.Error())
 					}
 				} else if !debug {
-					log.Info("Not sending e-mail (--send option not enabled), report follows:")
-					log.Info(report.Body.String())
+					log.Info(
+						"Not sending e-mail (--send option not enabled), report follows:\n",
+						report.Body.String(),
+					)
 				} else {
-					log.Debug("Not sending e-mail (debug mode), report follows:")
-					log.Debug(report.Body.String())
+					log.Debug(
+						"Not sending e-mail (debug mode), report follows:\n",
+						report.Body.String(),
+					)
 				}
 			}
 		}
