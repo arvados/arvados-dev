@@ -200,43 +200,24 @@ https://git.arvados.org/arvados-dev.git/cmd/review-task-reminder` +
 			}
 
 			log.Debugf("Retrieved %d issues", len(issues))
+			// Set up reviewTasksByDeveloper with an entry for every developer
+			// assigned an issue this sprint. This ensures all developers get
+			// an email whether or not they own a review task.
 			reviewTasksByDeveloper := make(map[int][]ReviewTask)
+			for _, i := range issues {
+				if i.AssignedTo != nil {
+					reviewTasksByDeveloper[i.AssignedTo.ID] = nil
+				}
+			}
+
+			// Filter for review tasks (issue subject must contain 'review')
+			reviewRE := regexp.MustCompile(`(?i)\breview\b`)
 			var UnassignedReviewTasks []ReviewTask
 			for _, i := range issues {
 				log.Debugf("Considering issue (%s): %+#v, \"%s\"", i.Tracker.Name, i.ID, i.Subject)
-				// Filter for tasks
-				if i.Tracker.Name != "Task" {
+				if i.Tracker.Name != "Task" || !reviewRE.MatchString(i.Subject) {
+					log.Debugf("Skipping issue #%d because it doesn't look like a review task", i.ID)
 					continue
-				}
-				// Filter for review tasks (issue subject must start with 'review')
-				reviewRE := regexp.MustCompile(`^(Review|review)`)
-				if !reviewRE.MatchString(i.Subject) {
-					continue
-				}
-				// Is the task assigned?
-				if i.AssignedTo == nil {
-					log.Debugf("Found unassigned review task: %+#v, \"%s\"", i.ID, i.Subject)
-					log.Debugf("Getting parent issue with ID %d", i.Parent.ID)
-					parent, err := rm.GetIssue(i.Parent.ID)
-					if err != nil {
-						log.Fatalf(err.Error())
-					}
-					rt := ReviewTask{
-						IssueID:      "#" + strconv.Itoa(parent.ID),
-						IssueSubject: limit(parent.Subject, 58),
-						IssueURL:     conf.Endpoint + "/issues/" + strconv.Itoa(parent.ID),
-						ID:           "#" + strconv.Itoa(i.ID),
-						Subject:      limit(i.Subject, 58),
-						URL:          conf.Endpoint + "/issues/" + strconv.Itoa(i.ID),
-						Status:       i.Status.Name,
-					}
-					UnassignedReviewTasks = append(UnassignedReviewTasks, rt)
-					continue
-				}
-				// Found an assigned review task
-				log.Debugf("Found assigned review task: %+#v, \"%s\", assigned to %+#v", i.ID, i.Subject, i.AssignedTo.ID)
-				if _, ok := reviewTasksByDeveloper[i.AssignedTo.ID]; !ok {
-					reviewTasksByDeveloper[i.AssignedTo.ID] = []ReviewTask{}
 				}
 				log.Debugf("Getting parent issue with ID %d", i.Parent.ID)
 				parent, err := rm.GetIssue(i.Parent.ID)
@@ -252,7 +233,13 @@ https://git.arvados.org/arvados-dev.git/cmd/review-task-reminder` +
 					URL:          conf.Endpoint + "/issues/" + strconv.Itoa(i.ID),
 					Status:       i.Status.Name,
 				}
-				reviewTasksByDeveloper[i.AssignedTo.ID] = append(reviewTasksByDeveloper[i.AssignedTo.ID], rt)
+				if i.AssignedTo == nil {
+					log.Debugf("Found unassigned review task: %+#v, \"%s\"", i.ID, i.Subject)
+					UnassignedReviewTasks = append(UnassignedReviewTasks, rt)
+				} else {
+					log.Debugf("Found assigned review task: %+#v, \"%s\", assigned to %+#v", i.ID, i.Subject, i.AssignedTo.ID)
+					reviewTasksByDeveloper[i.AssignedTo.ID] = append(reviewTasksByDeveloper[i.AssignedTo.ID], rt)
+				}
 			}
 
 			// Create the report(s)
@@ -303,11 +290,15 @@ https://git.arvados.org/arvados-dev.git/cmd/review-task-reminder` +
 						log.Fatalf(err.Error())
 					}
 				} else if !debug {
-					log.Info("Not sending e-mail (--send option not enabled), report follows:")
-					log.Info(report.Body.String())
+					log.Info(
+						"Not sending e-mail (--send option not enabled), report follows:\n",
+						report.Body.String(),
+					)
 				} else {
-					log.Debug("Not sending e-mail (debug mode), report follows:")
-					log.Debug(report.Body.String())
+					log.Debug(
+						"Not sending e-mail (debug mode), report follows:\n",
+						report.Body.String(),
+					)
 				}
 			}
 		}
