@@ -1,5 +1,5 @@
 Prepare X.Y-staging branch
-Ensure that developer-run-tests and developer-run-tests-doc-sdk-java-R are passing on Jenkins
+Ensure all tests are passing on Jenkins
 Review release branch
 Draft release notes and publish them to www-dev
 Review release notes
@@ -8,11 +8,11 @@ Build RC packages
 Build RC arvados/jobs image
 Test installer formula / provision scripts with RC packages
 Build compute image & deploy RC packages to playground
-Run CWL conformance tests (jenkins) and bam-to-vcf demo pipeline (playground)
+Run run-tests-cwl-tests and bam-to-vcf demo pipeline on pirca
 Manual testing
 Approve RC for release
 Publish Ruby gems
-Update "Upgrading notes", Gemfiles to use published Ruby gems, bin/arvbox, R/DESCRIPTION, ansible arvados_pin_version
+Update "Upgrading notes" and version numbers throughout the source
 Build final release packages
 Publish stable arvados/jobs Docker image
 Push packages to stable
