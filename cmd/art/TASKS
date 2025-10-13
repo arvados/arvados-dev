@@ -1,4 +1,3 @@
-Build and test new tordo compute node, update third-party package pin versions
 Prepare X.Y-staging branch
 Ensure that developer-run-tests and developer-run-tests-doc-sdk-java-R are passing on Jenkins
 Review release branch
@@ -20,7 +19,6 @@ Push packages to stable
 Publish Python packages
 Publish Java package
 Publish R package
-Publish arvados/arvbox-demo image
 Tag commits, fast-forward X.Y-release branch to match X.Y-staging
 Ensure doc.arvados.org is up to date
 Update pirca and jutro to stable release
