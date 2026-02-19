@@ -67,7 +67,7 @@ RedmineIssue = t.TypedDict('RedmineIssue', {
     'Remaining (hours)': str,
     'Release': str,
     'Backlog type': str,
-    # Synthesized by the Output class for use in format strings
+    # Synthesized by iter_issues for use in format strings
     'IssueNumber': str,
     'URL': str,
 }, total=False)
@@ -75,7 +75,6 @@ RedmineIssue = t.TypedDict('RedmineIssue', {
 
 @dataclasses.dataclass
 class Output:
-    redmine_url: urllib.parse.ParseResult
     section_keys: abc.Sequence[str]
     private_key: str = 'Project'
     private_re: t.Pattern | str = re.compile(
@@ -112,10 +111,6 @@ class Output:
 
     def write(self, issues: abc.Iterable[RedmineIssue], f: t.TextIO) -> None:
         for issue in sorted(issues, key=self._get_section):
-            issue['IssueNumber'] = issue['#']
-            url_path = PurePosixPath(self.redmine_url.path, 'issues', issue['#'])
-            url = self.redmine_url._replace(path=str(url_path))
-            issue['URL'] = urllib.parse.urlunparse(url)
             self._write_section(issue, f)
             self._write_issue(issue, f)
 
@@ -180,11 +175,22 @@ column in the CSV. Can be specified multiple times.
         return retargs
 
 
+def iter_issues(args: argparse.Namespace) -> abc.Iterator[RedmineIssue]:
+    issues_url = args.redmine_endpoint
+    issues_path = PurePosixPath(issues_url.path, 'issues')
+    with args.issues_csv:
+        for issue in csv.DictReader(args.issues_csv):
+            issue = t.cast(RedmineIssue, issue)
+            issue['IssueNumber'] = issue['#']
+            url = issues_url._replace(path=str(issues_path / issue['#']))
+            issue['URL'] = urllib.parse.urlunparse(url)
+            yield issue
+
+
 def main(args: argparse.Namespace):
-    output = Output(args.redmine_endpoint, args.section_keys)
-    with args.output_file, args.issues_csv:
-        issues = t.cast(t.Iterable[RedmineIssue], csv.DictReader(args.issues_csv))
-        output.write(issues, args.output_file)
+    output = Output(args.section_keys)
+    with args.output_file:
+        output.write(iter_issues(args), args.output_file)
     return os.EX_OK
 
 
