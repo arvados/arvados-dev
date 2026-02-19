@@ -187,7 +187,7 @@ def iter_issues(args: argparse.Namespace) -> abc.Iterator[RedmineIssue]:
             yield issue
 
 
-def main(args: argparse.Namespace):
+def main(args: argparse.Namespace) -> int:
     output = Output(args.section_keys)
     with args.output_file:
         output.write(iter_issues(args), args.output_file)
