@@ -524,7 +524,13 @@ var findAndAssociateIssuesCmd = &cobra.Command{
 			fmt.Println(i.Subject)
 			fmt.Println(issues[k])
 
-			if i.Release != nil && i.Release["release"].ID != 0 {
+			nonReleaseIDs := map[int]bool{
+				0:  true, // Go default for no release
+				82: true, // Arvados Backend Bugs
+				83: true, // Arvados Frontend Bugs
+			}
+
+			if i.Release != nil && !nonReleaseIDs[i.Release["release"].ID] {
 				if i.Release["release"].ID == releaseID {
 					fmt.Printf("[ok] release is already set to %d, nothing to do\n", i.Release["release"].ID)
 				} else if !skipReleaseChange {
