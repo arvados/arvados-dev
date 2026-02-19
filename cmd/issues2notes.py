@@ -83,8 +83,8 @@ class Output:
     )
     _last_section: t.Sequence[str] = ()
 
-    PUBLIC_FMT = "[#{IssueNumber}]({URL}) [{Subject}]"
-    PRIVATE_FMT = "#{IssueNumber} [PRIVATE: [{Subject}]({URL})]"
+    PUBLIC_FMT = "{Subject} [#{IssueNumber}]({URL})"
+    PRIVATE_FMT = "{Subject} [(PRIVATE)]({URL}) #{IssueNumber}"
 
     def _get_section(self, issue: RedmineIssue) -> t.Sequence[str]:
         return tuple(issue[key] for key in self.section_keys)
